@@ -39,24 +39,14 @@ const AuthScreen = () => {
     3: "#00c851",
   };
 
-  // Calcul de la force du mot de passe
   const calculatePasswordStrength = (pass: string) => {
     let strength = 0;
     if (pass.length >= 6) strength++;
     if (pass.length >= 8) strength++;
-    if (/[A-Z]/.test(pass)) strength++;
-    if (/[0-9]/.test(pass)) strength++;
     if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) strength++;
-    return Math.min(strength, 3); // Limite à 3 pour strengthColors
+    return strength;
   };
 
-  // Validation de l'email
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  // Gestion de l'authentification
   const handleAuth = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setEmailError("");
@@ -91,20 +81,15 @@ const AuthScreen = () => {
       }
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      let errorMessage = "Une erreur s'est produite. Veuillez réessayer.";
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage = "Cet email est déjà utilisé.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Email invalide.";
-      }
-      Alert.alert("Erreur", errorMessage);
+      Alert.alert("Erreur", error.message);
     } finally {
       setIsLoading(false);
       setTimeout(() => setShowConfetti(false), 3000);
     }
   };
 
-  // Animation de secousse
+  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
+
   const triggerShake = () => {
     Animated.sequence([
       Animated.timing(shakeAnim, {
@@ -125,34 +110,34 @@ const AuthScreen = () => {
     ]).start();
   };
 
-  // Mise à jour de la force du mot de passe
   useEffect(() => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
-  // Animation de flottement
   useEffect(() => {
-    const floatAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    floatAnimation.start();
-
-    return () => {
-      floatAnimation.stop();
-    };
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+    ]).start();
   }, []);
 
   const floatInterpolation = floatAnim.interpolate({
@@ -197,7 +182,7 @@ const AuthScreen = () => {
         <View>
           <Text style={styles.title}>Didi Delight</Text>
 
-          {/* Champ Email */}
+          {/* Email Input */}
           <View style={styles.inputContainer}>
             <Ionicons
               name="mail-outline"
@@ -213,8 +198,6 @@ const AuthScreen = () => {
               placeholderTextColor="#6c757d"
               keyboardType="email-address"
               autoCapitalize="none"
-              accessibilityLabel="Email input"
-              accessibilityHint="Entrez votre adresse email"
             />
           </View>
           {emailError && (
@@ -224,7 +207,7 @@ const AuthScreen = () => {
             </View>
           )}
 
-          {/* Champ Mot de passe */}
+          {/* Password Input */}
           <View style={styles.inputContainer}>
             <Ionicons
               name="lock-closed-outline"
@@ -239,8 +222,6 @@ const AuthScreen = () => {
               secureTextEntry={!showPassword}
               style={styles.input}
               placeholderTextColor="#6c757d"
-              accessibilityLabel="Mot de passe input"
-              accessibilityHint="Entrez votre mot de passe"
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -268,7 +249,7 @@ const AuthScreen = () => {
                 ]}
               />
               <Text style={styles.strengthText}>
-                {passwordStrength > 0 ? ["Faible", "Moyen", "Fort"][passwordStrength - 1] : ""}
+                {["Faible", "Moyen", "Fort"][passwordStrength - 1]}
               </Text>
             </View>
           )}
@@ -280,7 +261,7 @@ const AuthScreen = () => {
             </View>
           )}
 
-          {/* Bouton d'authentification */}
+          {/* Auth Button */}
           <TouchableOpacity
             onPress={handleAuth}
             disabled={isLoading}
@@ -302,14 +283,14 @@ const AuthScreen = () => {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Séparateur pour les connexions sociales */}
+          {/* Social Login Separator */}
           <View style={styles.separatorContainer}>
             <View style={styles.separatorLine} />
             <Text style={styles.separatorText}>Ou continuer avec</Text>
             <View style={styles.separatorLine} />
           </View>
 
-          {/* Boutons sociaux */}
+          {/* Social Buttons */}
           <View style={styles.socialButtonsContainer}>
             <TouchableOpacity style={styles.socialButton}>
               <Ionicons name="logo-google" size={24} color="#db4437" />
@@ -322,7 +303,7 @@ const AuthScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Basculer entre connexion et inscription */}
+          {/* Toggle Auth Mode */}
           <TouchableOpacity
             onPress={() => setIsLogin(!isLogin)}
             style={styles.toggleContainer}
@@ -340,7 +321,6 @@ const AuthScreen = () => {
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

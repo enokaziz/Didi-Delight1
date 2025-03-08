@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   Animated,
-  Easing,
   ActivityIndicator,
+  Alert,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,6 +15,10 @@ import { register, login } from "../services/authService";
 import * as Haptics from "expo-haptics";
 import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import ConfettiCannon from "react-native-confetti-cannon";
+import EmailInput from "../components/EmailInput";
+import PasswordInput from "../components/PasswordInput";
+import AuthButton from "../components/AuthButton";
+import ErrorMessage from "../components/ErrorMessage";
 
 const AuthScreen = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +34,6 @@ const AuthScreen = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  // Configuration force mot de passe
   const strengthColors = {
     0: "#ff4444",
     1: "#ff4444",
@@ -145,20 +147,16 @@ const AuthScreen = () => {
     outputRange: [0, -15],
   });
 
+  const animatedStyles = {
+    opacity: fadeAnim,
+    transform: [
+      { translateX: shakeAnim },
+      { translateY: floatInterpolation },
+    ],
+  };
+
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { translateX: shakeAnim },
-            { translateY: floatInterpolation },
-          ],
-        },
-      ]}
-    >
-      {/* Confettis */}
+    <Animated.View style={[styles.container, animatedStyles]}>
       {showConfetti && (
         <ConfettiCannon
           count={200}
@@ -182,60 +180,22 @@ const AuthScreen = () => {
         <View>
           <Text style={styles.title}>Didi Delight</Text>
 
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color="#6c757d"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              placeholder="Adresse email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-              placeholderTextColor="#6c757d"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-          {emailError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={16} color="#dc3545" />
-              <Text style={styles.errorText}>{emailError}</Text>
-            </View>
-          )}
+          <EmailInput
+            value={email}
+            onChange={setEmail}
+            error={emailError}
+          />
+          <ErrorMessage message={emailError} />
 
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color="#6c757d"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              placeholder="Mot de passe"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              style={styles.input}
-              placeholderTextColor="#6c757d"
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={20}
-                color={showPassword ? "#4f46e5" : "#6c757d"}
-              />
-            </TouchableOpacity>
-          </View>
+          <PasswordInput
+            value={password}
+            onChange={setPassword}
+            showPassword={showPassword}
+            toggleShowPassword={() => setShowPassword(!showPassword)}
+            error={passwordError}
+          />
+          <ErrorMessage message={passwordError} />
 
-          {/* Indicateur de force du mot de passe */}
           {!isLogin && password.length > 0 && (
             <View style={styles.strengthContainer}>
               <View
@@ -254,43 +214,18 @@ const AuthScreen = () => {
             </View>
           )}
 
-          {passwordError && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={16} color="#dc3545" />
-              <Text style={styles.errorText}>{passwordError}</Text>
-            </View>
-          )}
-
-          {/* Auth Button */}
-          <TouchableOpacity
+          <AuthButton
             onPress={handleAuth}
-            disabled={isLoading}
-            style={[styles.button, isLoading ? styles.buttonPressed : null]}
-          >
-            <LinearGradient
-              colors={["#6366f1", "#4f46e5"]}
-              style={styles.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  {isLogin ? "Se connecter" : "Créer un compte"}
-                </Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+            isLoading={isLoading}
+            isLogin={isLogin}
+          />
 
-          {/* Social Login Separator */}
           <View style={styles.separatorContainer}>
             <View style={styles.separatorLine} />
             <Text style={styles.separatorText}>Ou continuer avec</Text>
             <View style={styles.separatorLine} />
           </View>
 
-          {/* Social Buttons */}
           <View style={styles.socialButtonsContainer}>
             <TouchableOpacity style={styles.socialButton}>
               <Ionicons name="logo-google" size={24} color="#db4437" />
@@ -303,7 +238,6 @@ const AuthScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Toggle Auth Mode */}
           <TouchableOpacity
             onPress={() => setIsLogin(!isLogin)}
             style={styles.toggleContainer}
@@ -364,65 +298,6 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: "center",
     letterSpacing: 0.5,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 18,
-    fontSize: 16,
-    color: "#2d3436",
-  },
-  eyeIcon: {
-    padding: 8,
-  },
-  button: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 20,
-    shadowColor: "#4f46e5",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  gradient: {
-    paddingVertical: 18,
-    alignItems: "center",
-  },
-  buttonPressed: {
-    opacity: 0.9,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  errorText: {
-    color: "#dc3545",
-    fontSize: 14,
-    marginLeft: 5,
   },
   strengthContainer: {
     flexDirection: "row",

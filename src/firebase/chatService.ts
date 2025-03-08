@@ -35,7 +35,7 @@ export const fetchPreviousMessages = async (chatId: string, lastVisible: any) =>
  * Interface décrivant un message de chat.
  */
 export interface ChatMessage {
-  id?: string; // Ajout d'un champ optionnel pour l'ID du document Firestore
+  id?: string; 
   senderId: string;
   receiverId: string;
   message: string;
@@ -45,72 +45,40 @@ export interface ChatMessage {
 /**
  * Envoie un message dans une conversation.
  */
+
 export const sendMessage = async (
   chatId: string,
   senderId: string,
   receiverId: string,
-  message: string,
-  onError?: (error: FirestoreError | Error) => void
+  message: string
 ): Promise<void> => {
   try {
-    const docRef = await addDoc(collection(db, "chats", chatId, "messages"), {
+    await addDoc(collection(db, "chats", chatId, "messages"), {
       senderId,
       receiverId,
       message,
       timestamp: Date.now(),
     });
-    console.log("Message envoyé avec l'ID :", docRef.id);
   } catch (error) {
-    console.error("Erreur lors de l'envoi du message :", error);
-    if (onError) {
-      onError(error as FirestoreError | Error);
-    }
+    console.error("Erreur lors de l'envoi du message:", error);
+    throw error;
   }
 };
+
 
 /**
  * Souscrit en temps réel aux messages d'une conversation.
  */
 export const subscribeToChat = (
-  chatId: string,
-  callback: (messages: ChatMessage[]) => void,
-  onError?: (error: FirestoreError | Error) => void
-): (() => void) => {
-  try {
-    const q = query(
-      collection(db, "chats", chatId, "messages"),
-      orderBy("timestamp", "asc")
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const messages: ChatMessage[] = snapshot.docs.map((doc) => {
-          const data = doc.data() as ChatMessage;
-          return {
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp || Date.now(), // Valeur par défaut si manquante
-          };
-        });
-        callback(messages);
-      },
-      (error) => {
-        console.error("Erreur lors de la souscription au chat :", error);
-        if (onError) {
-          onError(error as FirestoreError | Error);
-        }
-      }
-    );
-
-    return unsubscribe;
-  } catch (error) {
-    console.error("Erreur lors de la création de la souscription :", error);
-    if (onError) {
-      onError(error as FirestoreError | Error);
-    }
-    return () => {}; // Retourne une fonction vide en cas d'erreur
-  }
+chatId: string, callback: (messages: ChatMessage[]) => void, p0: (error: any) => void): (() => void) => {
+  const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
+  return onSnapshot(q, (snapshot) => {
+    const messages = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as ChatMessage[];
+    callback(messages);
+  });
 };
 
 /**
@@ -120,7 +88,6 @@ export interface Chat {
   id: string;
   clientId: string;
   lastMessage: string;
-  timestamp: number;
   lastMessageTimestamp: number;
 }
 
@@ -130,13 +97,18 @@ export interface Chat {
 export const getAllChats = async (): Promise<Chat[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, "chats"));
-    const chats: Chat[] = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<Chat, "id">),
-    }));
-    return chats;
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      if (!data.clientId) throw new Error("Chat invalide: clientId manquant");
+      return {
+        id: doc.id,
+        clientId: data.clientId,
+        lastMessage: data.lastMessage || "Aucun message",
+        lastMessageTimestamp: data.lastMessageTimestamp || Date.now(),
+      } as Chat;
+    });
   } catch (error) {
-    console.error("Erreur lors de la récupération des chats :", error);
-    throw error; // Propage l'erreur pour une gestion centralisée
+    console.error("Erreur critique:", error);
+    throw new Error("Échec de la récupération des chats");
   }
 };

@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dididelight.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +22,29 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [ "ACCESS_FINE_LOCATION", "CAMERA", "RECEIVE_BOOT_COMPLETED" ],
-      "package": "com.dididelight.app"
+      "package": "com.dididelight.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",          
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          },
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+      
+    ]
   }
 }

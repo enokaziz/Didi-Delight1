@@ -1,70 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Animated, SafeAreaView } from "react-native";
-import { collection, getDocs, query } from "firebase/firestore";
-import { db } from "../../firebase/firebaseConfig";
-import { Order } from "../../types/Order";
+import React, { useMemo, useCallback, useEffect, useState } from "react";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Animated, SafeAreaView, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 import { logout } from "services/authService";
+import OrderStatistic from "./OrderStatistic";
+import useAdminData from "hooks/useAdminData";
+import { AdminStackParamList } from "navigation/types";
 
-type AdminStackParamList = {
-    ProductManagement: undefined;
-    AdminChats: undefined;
-    Auth: undefined;
-};
 
-const OrderStatistic: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
-    <View style={styles.statContainer}>
-        <Ionicons name="stats-chart" size={24} color="#fff" />
-        <Text style={styles.statText}>{label} : {value}</Text>
-    </View>
-);
 
 const AdminDashboardScreen: React.FC = () => {
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { orders, products, loading, error } = useAdminData();
     const navigation = useNavigation<StackNavigationProp<AdminStackParamList, "ProductManagement">>();
     const [fadeAnim] = useState(new Animated.Value(0));
-
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const q = query(collection(db, "orders"));
-                const querySnapshot = await getDocs(q);
-                const fetchedOrders = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Order[];
-                setOrders(fetchedOrders);
-            } catch (error: any) {
-                console.error("Erreur lors de la récupération des commandes :", error);
-                setError(`Une erreur est survenue lors de la récupération des commandes : ${error.message}`);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        const fetchProducts = async () => {
-            try {
-                const q = query(collection(db, "products"));
-                const querySnapshot = await getDocs(q);
-                const fetchedProducts = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setProducts(fetchedProducts);
-            } catch (error: any) {
-                console.error("Erreur lors de la récupération des produits :", error);
-                setError(`Une erreur est survenue lors de la récupération des produits : ${error.message}`);
-            }
-        };
-
-        fetchOrders();
-        fetchProducts();
-    }, []);
 
     useEffect(() => {
         if (!loading && !error) {
@@ -83,11 +32,7 @@ const AdminDashboardScreen: React.FC = () => {
         const productFrequency: { [key: string]: number } = {};
         orders.forEach(order => {
             order.items.forEach(product => {
-                if (productFrequency[product.id]) {
-                    productFrequency[product.id] += 1;
-                } else {
-                    productFrequency[product.id] = 1;
-                }
+                productFrequency[product.id] = (productFrequency[product.id] || 0) + 1;
             });
         });
         return Object.entries(productFrequency)
@@ -102,12 +47,13 @@ const AdminDashboardScreen: React.FC = () => {
 
     const handleLogout = useCallback(async () => {
         try {
-            await logout();
-            navigation.navigate("Auth");
-        } catch (error: any) {
-            console.error("Erreur lors de la déconnexion :", error);
+          await logout(); // Déconnecte l'utilisateur
+          navigation.navigate("Auth"); // Redirige vers l'écran Auth
+        } catch (error) {
+          console.error("Erreur lors de la déconnexion :", error);
+          Alert.alert("Erreur", "Impossible de se déconnecter. Veuillez réessayer.");
         }
-    }, [navigation]);
+      }, [navigation]);
 
     const getProductName = useCallback((productId: string) => {
         const product = products.find(p => p.id === productId);
@@ -116,7 +62,7 @@ const AdminDashboardScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Animated.View style={styles.content}>
+            <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
                 <Text style={styles.title}>Tableau de Bord Admin</Text>
 
                 <TouchableOpacity
@@ -164,7 +110,7 @@ const AdminDashboardScreen: React.FC = () => {
                                     </Text>
                                 </View>
                             )}
-                            style={{ maxHeight: 300 }} // Limite la hauteur de la FlatList
+                            style={{ maxHeight: 300 }}
                         />
                     </>
                 )}
@@ -190,8 +136,6 @@ const styles = StyleSheet.create({
     button: { flexDirection: "row", backgroundColor: "#007AFF", padding: 10, borderRadius: 8, alignItems: "center", marginBottom: 20, justifyContent: "center" },
     buttonText: { color: "#fff", fontWeight: "bold", marginLeft: 10 },
     loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-    statContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#007AFF", borderRadius: 8, padding: 10, marginBottom: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 5, elevation: 2 },
-    statText: { fontSize: 18, color: "#fff", marginLeft: 10 },
     subtitle: { fontSize: 20, marginTop: 20, marginBottom: 10, fontWeight: "bold", color: "#333", textAlign: "center" },
     productItemContainer: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
     productItem: { fontSize: 16, marginLeft: 10, color: "#333" },

@@ -7,11 +7,12 @@ import { useAuth } from "../contexts/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import ClientNavigator from "./ClientNavigator";
 import AdminNavigator from "./AdminNavigator";
+import { RootStackParamList } from "../navigation/types";
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 const MainNavigator = () => {
-  const { user, userRole, loading } = useAuth(); // Récupération du rôle utilisateur
+  const { user, userRole, loading } = useAuth();
 
   if (loading) {
     return (
@@ -23,9 +24,9 @@ const MainNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          <Stack.Screen name="AuthStack" component={AuthNavigator} />
+          <Stack.Screen name="Auth" component={AuthNavigator} /> 
         ) : userRole === "admin" ? (
           <Stack.Screen name="AdminApp" component={AdminNavigator} />
         ) : (

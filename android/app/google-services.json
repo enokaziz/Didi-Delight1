@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "747650559227",
+    "project_id": "didi-delight",
+    "storage_bucket": "didi-delight.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:747650559227:android:a257c4cfc4e3774839d45e",
+        "android_client_info": {
+          "package_name": "com.dididelight"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "747650559227-4fgfr31o5ev7kp1t574k90ts0dbf8ets.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRoZ1hWjKlcpoP1JCfh7nrQ2DoXucfEow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "747650559227-4fgfr31o5ev7kp1t574k90ts0dbf8ets.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -74,7 +74,8 @@ const ChatScreen: React.FC = () => {
         await sendMessage(chatId, user.uid, "admin", input);
         setInput("");
       } catch (error) {
-        Alert.alert("Erreur", "Échec de l'envoi du message");
+    Alert.alert("Erreur", "Échec de l'envoi du message : " + (error as Error).message); // Message d'erreur plus informatif
+
       }
     }, [chatId, input, user]);
   

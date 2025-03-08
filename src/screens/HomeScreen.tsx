@@ -38,9 +38,10 @@ const HomeScreen = () => {
         return (
             typeof data?.name === "string" &&
             typeof data?.price === "number" &&
-            typeof data?.category === "string" &&
-            typeof data?.imageUrl === "string" &&
-            typeof data?.description === "string"
+            typeof data?.category === "string"  &&
+            typeof data?.image === "string" &&
+            typeof data?.description === "string" 
+
         );
     };
 
@@ -48,23 +49,22 @@ const HomeScreen = () => {
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
-            const q = query(collection(db, "products"));
-            const querySnapshot = await getDocs(q);
-            console.log("Nombre de documents récupérés :", querySnapshot.size);
-            if (querySnapshot.empty) {
-                console.log("Aucun produit trouvé !");
-            }
-            const productList = querySnapshot.docs
-                .map((doc) => {
-                    const productData = doc.data();
-                    if (!isProductValid(productData)) {
-                        console.warn("Document invalide:", doc.id);
-                        return null;
-                    }
-                    const { id, ...rest } = productData;
-                    return { id: doc.id, ...rest } as Product; // Correction ici
-                })
-                .filter(Boolean) as Product[];
+          const q = query(collection(db, "products"));
+          const querySnapshot = await getDocs(q);
+          console.log("Nombre de documents récupérés :", querySnapshot.size);
+      
+          const productList = querySnapshot.docs
+            .map((doc) => {
+              const productData = doc.data();
+              if (!isProductValid(productData)) {
+                console.warn("Document invalide:", doc.id, productData);
+                return null; // Filtrage sans réinitialiser la liste
+              }
+              const { id: _, ...rest} = productData;
+              return { id: doc.id, ...rest } as Product;
+            })
+            .filter(Boolean) as Product[];
+      
             setProducts(productList);
             const uniqueCategories = [...new Set(productList.map((product) => product.category))];
             setCategories(uniqueCategories);

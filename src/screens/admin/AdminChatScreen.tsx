@@ -3,11 +3,8 @@ import { View, Text, StyleSheet, Alert } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { sendMessage, subscribeToChat, ChatMessage } from "../../firebase/chatService";
 import ChatCore from "../../components/chat/ChatCore";
+import { AdminStackParamList } from "navigation/types";
 
-// Typage des paramètres de navigation
-type AdminStackParamList = {
-  AdminChat: { clientId: string };
-};
 
 type AdminChatScreenRouteProp = RouteProp<AdminStackParamList, "AdminChat">;
 
@@ -40,11 +37,14 @@ const AdminChatScreen: React.FC = () => {
   // Envoi de message
   const handleSend = async () => {
     if (!input.trim()) return;
+    setIsUploading(true);
     try {
       await sendMessage(chatId, "admin", clientId, input);
       setInput("");
     } catch (error) {
       Alert.alert("Erreur", "Échec de l'envoi du message");
+      } finally {
+      setIsUploading(false);
     }
   };
 

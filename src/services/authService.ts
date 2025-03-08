@@ -2,7 +2,10 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 
+import { Alert } from "react-native"; // Ajout de l'import pour Alert
+
 // Inscription
+
 export const register = async (email: string, password: string) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);

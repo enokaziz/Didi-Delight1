@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from "
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { Alert } from "react-native";
 
 type UserRole = "admin" | "client" | "livreur" | "invité";
 
@@ -52,8 +53,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await auth.signOut();
       setUser(null);
       setUserRole("client");
+      
     } catch (error) {
       console.error("Erreur lors de la déconnexion :", error);
+      // Gérer l'erreur ici, par exemple en affichant une alerte
+      Alert.alert("Erreur", "Une erreur s'est produite lors de la déconnexion.");
       throw error;
     }
   };

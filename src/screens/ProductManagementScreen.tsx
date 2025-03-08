@@ -6,27 +6,22 @@ import { Button, IconButton, Card, Title, Paragraph } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import FastImage from 'react-native-fast-image';
-import ProductModal from '../components/ProductModal';
 import ProductList from '../components/ProductList';
 import useProductManagement from '../hooks/useProductManagement';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types'; // Importez les types de navigation
 import styles from './ProductManagementScreen.styles';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const ProductManagementScreen: React.FC = () => {
-  const { products, loading, fetchProducts, handleAddProduct, handleUpdateProduct, handleDeleteProduct } = useProductManagement();
+  const { products, loading, fetchProducts, handleDeleteProduct } = useProductManagement();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ProductManagement'>>(); // Annoter navigation
 
-  const [newProductName, setNewProductName] = useState<string>("");
-  const [newProductPrice, setNewProductPrice] = useState<string>("");
-  const [newProductImage, setNewProductImage] = useState<string | null>(null);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [page, setPage] = useState(1);
   const productsPerPage = 10;
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
-  const [newProductCategory, setNewProductCategory] = useState<string>("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const animatedValues = useRef<Animated.Value[]>([]);
 
@@ -36,24 +31,12 @@ const ProductManagementScreen: React.FC = () => {
     animatedValues.current = products.map(() => new Animated.Value(0));
   }, [products]);
 
-  const resetForm = () => {
-    setNewProductName("");
-    setNewProductPrice("");
-    setNewProductImage(null);
-    setNewProductCategory("");
-    setIsModalVisible(false);
-    setEditingProduct(null);
+  const handleAddProduct = () => {
+    navigation.navigate('AddEditProduct', { product: undefined }); // Naviguer vers l'écran d'ajout
   };
 
-  const selectImage = async () => {
-    const result: ImagePickerResponse = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-    });
-
-    if (!result.didCancel && result.assets?.[0]?.uri) {
-      setNewProductImage(result.assets[0].uri);
-    }
+  const handleEditProduct = (product: Product) => {
+    navigation.navigate('AddEditProduct', { product }); // Passer le produit à modifier
   };
 
   const filteredProducts = useMemo(() => {
@@ -104,40 +87,12 @@ const ProductManagementScreen: React.FC = () => {
 
       <Button
         mode="contained"
-        onPress={() => setIsModalVisible(true)}
+        onPress={handleAddProduct}
         style={styles.addButton}
         accessibilityLabel="Ajouter un produit"
       >
         Ajouter un produit
       </Button>
-
-      <ProductModal
-        isVisible={isModalVisible}
-        onDismiss={() => setIsModalVisible(false)}
-        newProductName={newProductName}
-        setNewProductName={setNewProductName}
-        newProductPrice={newProductPrice}
-        setNewProductPrice={setNewProductPrice}
-        newProductCategory={newProductCategory}
-        setNewProductCategory={setNewProductCategory}
-        handleAddProduct={() => handleAddProduct(
-          {
-            name: newProductName.trim(),
-            price: parseFloat(newProductPrice.replace(',', '.')),
-            image: newProductImage || "",
-            description: "",
-            category: newProductCategory
-          },
-          fetchProducts,
-          resetForm
-        )}
-        handleUpdateProduct={() => handleUpdateProduct(
-          editingProduct!,
-          fetchProducts,
-          resetForm
-        )}
-        editingProduct={editingProduct}
-      />
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -146,17 +101,11 @@ const ProductManagementScreen: React.FC = () => {
       ) : (
         <ProductList
           products={paginatedProducts}
-          onEdit={(product) => {
-            setEditingProduct(product);
-            setNewProductName(product.name);
-            setNewProductPrice(String(product.price));
-            setNewProductImage(product.image);
-            setNewProductCategory(product.category);
-            setIsModalVisible(true);
-          }}
+          onEdit={handleEditProduct}
           onDelete={(productId) => handleDeleteProduct(productId, fetchProducts)}
         />
       )}
+
       <Toast />
     </View>
   );

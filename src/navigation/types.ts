@@ -1,8 +1,8 @@
-// src/types/navigation.ts
 import { Product } from "../types/Product";
 
 export type RootStackParamList = {
-  Auth: undefined;
+  Auth: undefined; // Ajouté ici
+  AuthScreen: undefined; // Déjà présent
   ClientApp: undefined;
   AdminApp: undefined;
   AddEditProduct: { product?: Product };
@@ -13,7 +13,11 @@ export type RootStackParamList = {
   LanguageSelector: undefined;
   Panier: undefined;
   Paramètres: undefined;
-  
+  ChangePasswordScreen: undefined;
+  AddressesScreen: undefined;
+  OrderHistory: undefined;
+  PaymentMethods: undefined;
+  HelpCenter: undefined;
 };
 
 export type AdminStackParamList = {
@@ -22,7 +26,8 @@ export type AdminStackParamList = {
   AdminChat: { clientId: string };
   ProductManagement: undefined;
   AddEditProduct: { product?: Product };
-  Auth: undefined;
+  Auth: undefined; // Garder cette ligne pour la compatibilité
+  AuthScreen: undefined; // Ajouté ici
 };
 
 export type ClientStackParamList = {
@@ -36,4 +41,8 @@ export type ClientStackParamList = {
   EditProfile: undefined;
   ChangePassword: undefined;
   LanguageSelector: undefined;
+  AddressesScreen: undefined;
+  OrderHistory: undefined;
+  PaymentMethods: undefined;
+  HelpCenter: undefined;
 };

@@ -26,7 +26,9 @@ const MainNavigator = () => {
     <NavigationContainer>
        <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} /> 
+        <Stack.Screen name="Auth" component={AuthNavigator} /> 
+
+
         ) : userRole === "admin" ? (
           <Stack.Screen name="AdminApp" component={AdminNavigator} />
         ) : (

@@ -14,6 +14,10 @@ import CheckoutScreen from "../screens/CheckoutScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import ChangePasswordScreen from "../screens/ChangePasswordScreen";
 import LanguageSelectorScreen from "../screens/LanguageSelectorScreen";
+import OrderHistory from "../screens/OrderHistory";
+import PaymentMethods from "../screens/PaymentMethods";
+import AddressesScreen from "../screens/AddressesScreen";
+import HelpCenter from "../screens/HelpCenter";
 
 const ICON_CONFIG = {
     Accueil: { lib: Ionicons, name: Platform.select({ ios: "ios-home", android: "home-outline" }) },
@@ -49,13 +53,17 @@ const SettingsStack = () => (
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="LanguageSelector" component={LanguageSelectorScreen} />
+        <Stack.Screen name="OrderHistory" component={OrderHistory} />
+        <Stack.Screen name="PaymentMethods" component={PaymentMethods} />
+        <Stack.Screen name="HelpCenter" component={HelpCenter} />
+        <Stack.Screen name="AddressesScreen" component={AddressesScreen} />
     </Stack.Navigator>
 );
 
 const ClientNavigator = () => {
     const iconScale = useRef(new Animated.Value(1)).current;
     const [focusedRouteName, setFocusedRouteName] = useState<string | undefined>(undefined);
-    const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined); // Ajout de currentRouteName
+    const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
 
     const handleIconPress = () => {
         Animated.sequence([
@@ -80,7 +88,7 @@ const ClientNavigator = () => {
                     const iconColor = focused ? "#FF4952" : "gray";
 
                     if (focused) {
-                        setCurrentRouteName(route.name); // Mise à jour de currentRouteName
+                        setCurrentRouteName(route.name);
                     }
 
                     return (
@@ -124,11 +132,7 @@ const ClientNavigator = () => {
             <Tab.Screen name="Commandes" component={OrderHistoryScreen} />
             <Tab.Screen name="Suivi Livraison" component={DeliveryTrackingScreen} />
             <Tab.Screen name="Paramètres" component={SettingsStack} />
-            <Tab.Screen
-                name="Chat"
-                component={ChatScreen}
-                options={{ tabBarLabel: "Support", tabBarAccessibilityLabel: "Contacter le support" }}
-            />
+            <Tab.Screen name="Chat" component={ChatScreen} options={{ tabBarLabel: "Support", tabBarAccessibilityLabel: "Contacter le support" }} />
         </Tab.Navigator>
     );
 };

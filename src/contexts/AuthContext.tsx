@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
-import { User, onAuthStateChanged } from "firebase/auth";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
+import { User, onAuthStateChanged, updatePassword as firebaseUpdatePassword } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { Alert } from "react-native";
@@ -11,6 +11,7 @@ interface AuthContextType {
   userRole: UserRole;
   loading: boolean;
   logout: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,24 +20,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole>("client");
   const [loading, setLoading] = useState(true);
+  const unsubscribeRoleRef = useRef<() => void>(); // Référence pour le désabonnement
 
   useEffect(() => {
-    let unsubscribeRole: () => void;
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       try {
         setUser(user);
         if (user) {
           const userRef = doc(db, "users", user.uid);
-          unsubscribeRole = onSnapshot(userRef, (doc) => {
+          unsubscribeRoleRef.current = onSnapshot(userRef, (doc) => {
             setUserRole(doc.exists() ? doc.data().role : "client");
           });
         } else {
           setUserRole("client");
+          if (unsubscribeRoleRef.current) {
+            unsubscribeRoleRef.current(); // Désabonne ici aussi
+          }
         }
       } catch (error) {
         console.error("Erreur :", error);
-        setUserRole("client");
       } finally {
         setLoading(false);
       }
@@ -44,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeRole) unsubscribeRole();
+      if (unsubscribeRoleRef.current) unsubscribeRoleRef.current();
     };
   }, []);
 
@@ -53,17 +55,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await auth.signOut();
       setUser(null);
       setUserRole("client");
-      
+      if (unsubscribeRoleRef.current) {
+        unsubscribeRoleRef.current(); // Désabonnement explicite lors du logout
+      }
     } catch (error) {
       console.error("Erreur lors de la déconnexion :", error);
-      // Gérer l'erreur ici, par exemple en affichant une alerte
-      Alert.alert("Erreur", "Une erreur s'est produite lors de la déconnexion.");
-      throw error;
+      Alert.alert("Erreur", "Déconnexion échouée.");
+    }
+  };
+  const updatePassword = async (newPassword: string) => {
+    try {
+      if (user) {
+        await firebaseUpdatePassword(user, newPassword);
+        Alert.alert("Succès", "Mot de passe mis à jour avec succès.");
+      } else {
+        throw new Error("Aucun utilisateur connecté.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mot de passe :", error);
+      Alert.alert("Erreur", "Échec de la mise à jour du mot de passe.");
     }
   };
 
+
   const contextValue = useMemo(
-    () => ({ user, userRole, loading, logout }),
+    () => ({ user, userRole, loading, logout, updatePassword }),
     [user, userRole, loading]
   );
 

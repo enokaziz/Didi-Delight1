@@ -1,5 +1,5 @@
 import React from 'react';
-import { Animated, Text, StyleSheet } from 'react-native';
+import { Animated, Text, StyleSheet, View } from 'react-native';
 import { Product } from '../../types/Product';
 
 type Props = {
@@ -8,24 +8,23 @@ type Props = {
 };
 
 const AnimatedCartItem = ({ item, animation }: Props) => {
-  if(!Animation) return null;
+  // Correction du bug: "Animation" -> "animation"
+  if(!animation) return null;
 
   return (
-    
-  <Animated.View style={[styles.container, {
-    opacity: animation,
-    transform: [{ translateY: animation.interpolate({
-      inputRange: [0, 1],
-      outputRange: [20, 0]
-    })
-   }]
-  }]}>
-    <Text style={styles.name}>{item.name}</Text>
-    <Text style={styles.price}>
-      {item.price} FCFA × {item.quantity || 1}
-    </Text>
-  </Animated.View>
-);
+    <Animated.View style={[styles.container, {
+      opacity: animation,
+      transform: [{ translateY: animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [20, 0]
+      })}]
+    }]}>
+      <Text style={styles.name}>{item.name}</Text>
+      <Text style={styles.price}>
+        {item.price} FCFA × {item.quantity || 1}
+      </Text>
+    </Animated.View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -41,8 +40,17 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  name: { /* ... */ },
-  price: { /* ... */ }
+  name: { 
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#212529'
+  },
+  price: { 
+    fontSize: 14,
+    color: '#495057',
+    fontWeight: '500'
+  }
 });
 
 export default AnimatedCartItem;

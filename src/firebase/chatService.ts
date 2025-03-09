@@ -47,11 +47,7 @@ export interface ChatMessage {
  */
 
 export const sendMessage = async (
-  chatId: string,
-  senderId: string,
-  receiverId: string,
-  message: string
-): Promise<void> => {
+chatId: string, senderId: string, receiverId: string, message: string, type: string): Promise<void> => {
   try {
     await addDoc(collection(db, "chats", chatId, "messages"), {
       senderId,

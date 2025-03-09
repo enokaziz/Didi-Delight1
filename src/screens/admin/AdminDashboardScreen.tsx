@@ -8,8 +8,6 @@ import OrderStatistic from "./OrderStatistic";
 import useAdminData from "hooks/useAdminData";
 import { AdminStackParamList } from "navigation/types";
 
-
-
 const AdminDashboardScreen: React.FC = () => {
     const { orders, products, loading, error } = useAdminData();
     const navigation = useNavigation<StackNavigationProp<AdminStackParamList, "ProductManagement">>();
@@ -47,13 +45,13 @@ const AdminDashboardScreen: React.FC = () => {
 
     const handleLogout = useCallback(async () => {
         try {
-          await logout(); // Déconnecte l'utilisateur
-          navigation.navigate("Auth"); // Redirige vers l'écran Auth
+            await logout(); // Déconnecte l'utilisateur
+            navigation.navigate("AuthScreen"); // Redirige vers l'écran AuthScreen
         } catch (error) {
-          console.error("Erreur lors de la déconnexion :", error);
-          Alert.alert("Erreur", "Impossible de se déconnecter. Veuillez réessayer.");
+            console.error("Erreur lors de la déconnexion :", error);
+            Alert.alert("Erreur", "Une erreur s'est produite lors de la déconnexion. Veuillez réessayer.");
         }
-      }, [navigation]);
+    }, [navigation]);
 
     const getProductName = useCallback((productId: string) => {
         const product = products.find(p => p.id === productId);

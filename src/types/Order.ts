@@ -11,3 +11,10 @@ export interface Order {
   paymentMethod: string; // Rendue obligatoire
   shippingAddress: string; // Rendue obligatoire
 }
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+}

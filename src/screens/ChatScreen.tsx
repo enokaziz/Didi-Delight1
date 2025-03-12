@@ -1,7 +1,4 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect, useCallback, useRef } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -11,116 +8,84 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Image,
   Platform,
   KeyboardAvoidingView,
   Modal,
-  Pressable,
   Dimensions,
   Linking,
-} from "react-native"
-import { useAuth } from "../contexts/AuthContext"
-import { sendMessage, subscribeToChat, type ChatMessage } from "../firebase/chatService"
-import * as ImagePicker from "expo-image-picker"
-import * as DocumentPicker from "expo-document-picker"
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage"
-import { storage } from "../firebase/firebaseConfig"
-import { SafeAreaView } from "react-native-safe-area-context"
-import FastImage from "react-native-fast-image"
-import { Ionicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons"
-import * as FileSystem from "expo-file-system"
-import * as MediaLibrary from "expo-media-library"
-import { StatusBar } from "expo-status-bar"
+} from "react-native";
+import { useAuth } from "../contexts/AuthContext";
+import { sendMessage, subscribeToChat, deleteMessage, fetchPreviousMessages, ChatMessage } from "../firebase/chatService";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../firebase/firebaseConfig";
+import { SafeAreaView } from "react-native-safe-area-context";
+import FastImage from "react-native-fast-image";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+import { StatusBar } from "expo-status-bar";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
+import * as Notifications from "expo-notifications";
+import AttachmentMenu from "../components/chat/AttachmentMenu";
+import FilePreview from "../components/chat/FilePreview";
+import MessageRenderer from "../components/chat/MessageRenderer";
+import { commonStyles } from "../styles/commonStyles";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
 
 // Configurations
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif"]
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif"];
 const ALLOWED_DOC_TYPES = [
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-]
-const SCREEN_WIDTH = Dimensions.get("window").width
+];
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
-// Types
-interface FilePreview {
-  uri: string
-  type: string
-  name: string
-  size: number
-}
-
-// Fonction utilitaire pour formater la date
-const formatMessageTime = (timestamp: number): string => {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const isToday =
-    date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
-
-  if (isToday) {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  } else {
-    return (
-      date.toLocaleDateString([], { day: "numeric", month: "short" }) +
-      " " +
-      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    )
-  }
-}
-
-// Fonction pour vérifier le type de fichier
-const isImageUrl = (url: string): boolean => {
-  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"]
-  return imageExtensions.some((ext) => url.toLowerCase().includes(ext))
-}
-
-const isPdfUrl = (url: string): boolean => {
-  return url.toLowerCase().includes(".pdf")
-}
-
-const getFileNameFromUrl = (url: string): string => {
-  try {
-    const urlParts = url.split("/")
-    let fileName = urlParts[urlParts.length - 1]
-    // Supprimer les paramètres d'URL si présents
-    if (fileName.includes("?")) {
-      fileName = fileName.split("?")[0]
-    }
-    // Décoder les caractères URL-encoded
-    return decodeURIComponent(fileName)
-  } catch (error) {
-    return "fichier"
-  }
+interface FilePreviewData {
+  uri: string;
+  type: string;
+  name: string;
+  size: number;
 }
 
 const ChatScreen: React.FC = () => {
-  const { user } = useAuth()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [filePreview, setFilePreview] = useState<FilePreview | null>(null)
-  const [lastVisible, setLastVisible] = useState<any>(null)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [imageViewerVisible, setImageViewerVisible] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [attachmentMenuVisible, setAttachmentMenuVisible] = useState(false)
-  const [downloadingFile, setDownloadingFile] = useState<string | null>(null)
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [filePreview, setFilePreview] = useState<FilePreviewData | null>(null);
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [attachmentMenuVisible, setAttachmentMenuVisible] = useState(false);
+  const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
 
-  const flatListRef = useRef<FlatList>(null)
-  const inputRef = useRef<TextInput>(null)
-  const adminName = "Support"
+  const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
+  const adminName = "Support";
+  const chatId = user ? `${user.uid}-admin` : "unknown-admin";
 
-  const chatId = user ? `${user.uid}-admin` : "unknown-admin"
-
-  // Charger les messages
+  // Gestion de la connexion utilisateur
   useEffect(() => {
-    if (!user) return
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) setError("Utilisateur déconnecté. Veuillez vous reconnecter.");
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
-    setLoading(true)
-    setError(null)
+  // Abonnement aux messages et notifications
+  useEffect(() => {
+    if (!user) return;
+
+    setLoading(true);
+    setError(null);
 
     const unsubscribe = subscribeToChat(
       chatId,
@@ -128,359 +93,157 @@ const ChatScreen: React.FC = () => {
         const validatedMessages = newMessages.map((message) => ({
           ...message,
           timestamp: message.timestamp || Date.now(),
-        }))
-        setMessages(validatedMessages)
-        setLoading(false)
-
-        // Scroll vers le bas seulement si on est déjà proche du bas
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }, 100)
-      },
-      (error) => {
-        console.error("Error loading messages:", error)
-        setError("Impossible de charger les messages. Veuillez réessayer.")
-        setLoading(false)
-      },
-    )
-
-    return () => unsubscribe()
-  }, [chatId, user])
-
-  // Rafraîchir les messages
-  const handleRefresh = useCallback(() => {
-    if (!user) return
-
-    setRefreshing(true)
-
-    // Réinitialiser et recharger les messages
-    const unsubscribe = subscribeToChat(
-      chatId,
-      (newMessages) => {
-        const validatedMessages = newMessages.map((message) => ({
-          ...message,
-          timestamp: message.timestamp || Date.now(),
-        }))
-        setMessages(validatedMessages)
-        setRefreshing(false)
-      },
-      (error) => {
-        console.error("Error refreshing messages:", error)
-        setError("Impossible de rafraîchir les messages.")
-        setRefreshing(false)
-      },
-    )
-
-    // Nettoyer l'abonnement après le rafraîchissement
-    setTimeout(() => {
-      unsubscribe()
-    }, 1000)
-  }, [chatId, user])
-
-  // Envoyer un message texte
-  const handleSend = useCallback(async () => {
-    try {
-      if ((!input.trim() && !filePreview) || !user) return
-
-      if (filePreview) {
-        setIsUploading(true)
-
-        try {
-          const response = await fetch(filePreview.uri)
-          const blob = await response.blob()
-
-          // Vérifier la taille du fichier
-          if (blob.size > MAX_FILE_SIZE) {
-            Alert.alert(
-              "Fichier trop volumineux",
-              `La taille maximale autorisée est de ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-            )
-            return
-          }
-
-          const fileRef = ref(storage, `chat/${chatId}/${Date.now()}_${filePreview.name}`)
-
-          await uploadBytes(fileRef, blob, {
-            contentType: filePreview.type,
-          })
-
-          const url = await getDownloadURL(fileRef)
-          await sendMessage(chatId, user.uid, "admin", url, filePreview.type)
-
-          // Ajouter un message texte si présent
-          if (input.trim()) {
-            await sendMessage(chatId, user.uid, "admin", input, "text")
-          }
-        } catch (error) {
-          console.error("Upload error:", error)
-          Alert.alert("Erreur", "Impossible d'envoyer le fichier. Veuillez réessayer.")
-        } finally {
-          setFilePreview(null)
-          setIsUploading(false)
+          status: message.status || "sent",
+        }));
+        setMessages(validatedMessages);
+        setLoading(false);
+        if (newMessages[newMessages.length - 1]?.senderId !== user.uid) {
+          Notifications.scheduleNotificationAsync({
+            content: { title: "Nouveau message", body: newMessages[newMessages.length - 1].message },
+            trigger: null,
+          });
         }
-      } else {
-        // Envoyer uniquement le message texte
-        await sendMessage(chatId, user.uid, "admin", input, "text")
+        if (!lastVisible) flatListRef.current?.scrollToEnd({ animated: true });
+      },
+      (err) => {
+        console.error("Error loading messages:", err);
+        setError("Impossible de charger les messages.");
+        setLoading(false);
       }
+    );
 
-      setInput("")
+    return () => unsubscribe();
+  }, [chatId, user, lastVisible]);
 
-      // Focus sur l'input après envoi
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 100)
-    } catch (error) {
-      console.error("Send message error:", error)
-      Alert.alert("Erreur", "Échec de l'envoi du message. Veuillez vérifier votre connexion et réessayer.")
-    }
-  }, [chatId, input, user, filePreview])
-
-  // Annuler le fichier en prévisualisation
-  const cancelFilePreview = () => {
-    setFilePreview(null)
-  }
-
-  // Ouvrir le menu d'attachement
-  const toggleAttachmentMenu = () => {
-    setAttachmentMenuVisible(!attachmentMenuVisible)
-  }
-
-  // Sélectionner une image
-  const handleImagePicker = async () => {
+  // Chargement des messages précédents (pagination)
+  const loadMoreMessages = useCallback(async () => {
+    if (loadingMore || !lastVisible || !user) return;
+    setLoadingMore(true);
     try {
-      if (!user) {
-        setError("Vous devez être connecté pour envoyer des fichiers")
-        return
-      }
-
-      // Fermer le menu d'attachement
-      setAttachmentMenuVisible(false)
-
-      // Vérifier les permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-      if (status !== "granted") {
-        Alert.alert("Permission requise", "Veuillez autoriser l'accès à votre galerie pour partager des images")
-        return
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      })
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0]
-
-        // Vérifier le type de fichier
-        if (!asset.type || !ALLOWED_IMAGE_TYPES.includes(asset.type)) {
-          Alert.alert("Type de fichier non supporté", "Veuillez sélectionner une image JPG, PNG ou GIF")
-          return
-        }
-
-        setFilePreview({
-          uri: asset.uri,
-          type: asset.type || "image/jpeg",
-          name: asset.fileName || `image_${Date.now()}.jpg`,
-          size: asset.fileSize || 0,
-        })
-      }
+      const previousMessages = await fetchPreviousMessages(chatId, lastVisible);
+      setMessages((prev) => [...previousMessages.reverse(), ...prev]);
+      setLastVisible(previousMessages[previousMessages.length - 1]);
     } catch (error) {
-      console.error("Image picker error:", error)
-      Alert.alert("Erreur", "Impossible de sélectionner l'image")
-    }
-  }
-
-  // Sélectionner un document
-  const handleDocumentPicker = async () => {
-    try {
-      if (!user) {
-        setError("Vous devez être connecté pour envoyer des fichiers")
-        return
-      }
-
-      // Fermer le menu d'attachement
-      setAttachmentMenuVisible(false)
-
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ALLOWED_DOC_TYPES,
-        copyToCacheDirectory: true,
-      })
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0]
-
-        // Vérifier la taille du fichier
-        if (asset.size && asset.size > MAX_FILE_SIZE) {
-          Alert.alert("Fichier trop volumineux", `La taille maximale autorisée est de ${MAX_FILE_SIZE / 1024 / 1024}MB`)
-          return
-        }
-
-        setFilePreview({
-          uri: asset.uri,
-          type: asset.mimeType || "application/octet-stream",
-          name: asset.name,
-          size: asset.size || 0,
-        })
-      }
-    } catch (error) {
-      console.error("Document picker error:", error)
-      Alert.alert("Erreur", "Impossible de sélectionner le document")
-    }
-  }
-
-  // Télécharger un fichier
-  const downloadFile = async (url: string) => {
-    try {
-      // Vérifier les permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync()
-      if (status !== "granted") {
-        Alert.alert("Permission requise", "Veuillez autoriser l'accès à votre galerie pour télécharger des fichiers")
-        return
-      }
-
-      setDownloadingFile(url)
-
-      const fileName = getFileNameFromUrl(url)
-      const fileUri = `${FileSystem.documentDirectory}${fileName}`
-
-      const downloadResumable = FileSystem.createDownloadResumable(url, fileUri, {}, (downloadProgress) => {
-        const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite
-        // Vous pourriez ajouter une barre de progression ici
-      })
-
-      const downloadResult = await downloadResumable.downloadAsync()
-
-      if (downloadResult && downloadResult.uri) {
-        const { uri } = downloadResult
-
-        if (isImageUrl(url)) {
-          const asset = await MediaLibrary.createAssetAsync(uri)
-          await MediaLibrary.createAlbumAsync("Chat", asset, false)
-          Alert.alert("Succès", "Image enregistrée dans votre galerie")
-        } else {
-          // Pour les autres types de fichiers
-          await MediaLibrary.createAssetAsync(uri)
-          Alert.alert("Succès", "Fichier téléchargé avec succès")
-        }
-      } else {
-        Alert.alert("Erreur", "Échec du téléchargement du fichier")
-      }
-    } catch (error) {
-      console.error("Download error:", error)
-      Alert.alert("Erreur", "Impossible de télécharger le fichier")
+      Alert.alert("Erreur", "Impossible de charger plus de messages.");
     } finally {
-      setDownloadingFile(null)
+      setLoadingMore(false);
     }
-  }
+  }, [chatId, lastVisible, user, loadingMore]);
 
-  // Ouvrir l'image en plein écran
-  const openImageViewer = (imageUrl: string) => {
-    setSelectedImage(imageUrl)
-    setImageViewerVisible(true)
-  }
+  // Rafraîchissement manuel
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setLastVisible(null); // Réinitialise pour recharger tout
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
-  // Ouvrir un PDF
-  const openPdf = (url: string) => {
-    Linking.openURL(url).catch((err) => {
-      Alert.alert("Erreur", "Impossible d'ouvrir ce fichier")
-    })
-  }
+  // Validation des fichiers
+  const validateFile = useCallback((file: FilePreviewData) => {
+    if (file.size > MAX_FILE_SIZE) throw new Error(`Fichier trop volumineux (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+    if (![...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOC_TYPES].includes(file.type)) throw new Error("Type de fichier non supporté");
+    return true;
+  }, []);
 
-  // Rendu d'un message
-  const renderMessage = useCallback(
-    ({ item }: { item: ChatMessage }) => {
-      const isCurrentUser = item.senderId === user?.uid
-      const isFileMessage = item.message.startsWith("https://")
-      const isImage = isFileMessage && isImageUrl(item.message)
-      const isPdf = isFileMessage && isPdfUrl(item.message)
-      const isOtherFile = isFileMessage && !isImage && !isPdf
-      const fileName = isFileMessage ? getFileNameFromUrl(item.message) : ""
-      const isDownloading = downloadingFile === item.message
+  // Envoi de message ou fichier
+  const handleSend = useCallback(async () => {
+    if ((!input.trim() && !filePreview) || !user) return;
 
-      return (
-        <View style={[styles.messageContainer, isCurrentUser ? styles.clientMessage : styles.adminMessage]}>
-          {!isCurrentUser && (
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{adminName.charAt(0)}</Text>
-              </View>
-            </View>
-          )}
+    setIsUploading(true);
+    try {
+      if (filePreview) {
+        validateFile(filePreview);
+        const response = await fetch(filePreview.uri);
+        const blob = await response.blob();
+        const fileRef = ref(storage, `chat/${chatId}/${Date.now()}_${filePreview.name}`);
+        await uploadBytes(fileRef, blob, { contentType: filePreview.type });
+        const url = await getDownloadURL(fileRef);
+        await sendMessage(chatId, user.uid, "admin", url, filePreview.type);
+      }
+      if (input.trim()) {
+        await sendMessage(chatId, user.uid, "admin", input, "text");
+      }
+      setInput("");
+      setFilePreview(null);
+      inputRef.current?.focus();
+    } catch (error) {
+      Alert.alert("Erreur", (error as Error).message || "Échec de l'envoi.");
+    } finally {
+      setIsUploading(false);
+    }
+  }, [chatId, input, user, filePreview, validateFile]);
 
-          <View style={[styles.messageBubble, isCurrentUser ? styles.clientBubble : styles.adminBubble]}>
-            {isImage ? (
-              <Pressable onPress={() => openImageViewer(item.message)}>
-                <FastImage
-                  source={{ uri: item.message }}
-                  style={styles.messageImage}
-                  resizeMode={FastImage.resizeMode.cover}
-                />
-                <View style={styles.messageActions}>
-                  <TouchableOpacity
-                    style={styles.messageAction}
-                    onPress={() => downloadFile(item.message)}
-                    disabled={isDownloading}
-                  >
-                    {isDownloading ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Ionicons name="download-outline" size={18} color="#fff" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </Pressable>
-            ) : isPdf ? (
-              <Pressable style={styles.fileContainer} onPress={() => openPdf(item.message)}>
-                <MaterialIcons name="picture-as-pdf" size={24} color="#E44D26" />
-                <Text style={styles.fileName} numberOfLines={1}>
-                  {fileName}
-                </Text>
-                <TouchableOpacity
-                  style={styles.downloadButton}
-                  onPress={() => downloadFile(item.message)}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color="#007AFF" />
-                  ) : (
-                    <Ionicons name="download-outline" size={18} color="#007AFF" />
-                  )}
-                </TouchableOpacity>
-              </Pressable>
-            ) : isOtherFile ? (
-              <Pressable style={styles.fileContainer} onPress={() => Linking.openURL(item.message)}>
-                <MaterialIcons name="insert-drive-file" size={24} color="#4285F4" />
-                <Text style={styles.fileName} numberOfLines={1}>
-                  {fileName}
-                </Text>
-                <TouchableOpacity
-                  style={styles.downloadButton}
-                  onPress={() => downloadFile(item.message)}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color="#007AFF" />
-                  ) : (
-                    <Ionicons name="download-outline" size={18} color="#007AFF" />
-                  )}
-                </TouchableOpacity>
-              </Pressable>
-            ) : (
-              <Text style={styles.messageText}>{item.message}</Text>
-            )}
+  // Sélection d'image
+  const handleImagePicker = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission requise", "Autorisez l'accès à la galerie.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      setFilePreview({
+        uri: asset.uri,
+        type: asset.type || "image/jpeg",
+        name: asset.fileName || `image_${Date.now()}.jpg`,
+        size: asset.fileSize || 0,
+      });
+    }
+    setAttachmentMenuVisible(false);
+  }, []);
 
-            <Text style={styles.messageTime}>{formatMessageTime(item.timestamp)}</Text>
-          </View>
-        </View>
-      )
-    },
-    [user, downloadingFile],
-  )
+  // Sélection de document
+  const handleDocumentPicker = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: ALLOWED_DOC_TYPES });
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      setFilePreview({
+        uri: asset.uri,
+        type: asset.mimeType || "application/pdf",
+        name: asset.name,
+        size: asset.size || 0,
+      });
+    }
+    setAttachmentMenuVisible(false);
+  }, []);
+
+  // Téléchargement de fichier
+  const downloadFile = useCallback(async (url: string) => {
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission requise", "Autorisez l'accès au stockage.");
+      return;
+    }
+    setDownloadingFile(url);
+    try {
+      const fileName = url.split("/").pop()?.split("?")[0] || "file";
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      const { uri } = await FileSystem.downloadAsync(url, fileUri);
+      await MediaLibrary.createAssetAsync(uri);
+      Alert.alert("Succès", "Fichier téléchargé dans votre galerie.");
+    } catch (error) {
+      Alert.alert("Erreur", "Échec du téléchargement.");
+    } finally {
+      setDownloadingFile(null);
+    }
+  }, []);
+
+  // Suppression de message
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    try {
+      await deleteMessage(chatId, messageId);
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de supprimer le message.");
+    }
+  }, [chatId]);
 
   // Rendu de l'en-tête
-  const renderHeader = () => (
+  const renderHeader = useCallback(() => (
     <View style={styles.header}>
       <TouchableOpacity style={styles.backButton}>
         <Ionicons name="arrow-back" size={24} color="#000" />
@@ -490,116 +253,33 @@ const ChatScreen: React.FC = () => {
         <Text style={styles.headerSubtitle}>Service client</Text>
       </View>
     </View>
-  )
+  ), [adminName]);
 
-  // Rendu de la prévisualisation de fichier
-  const renderFilePreview = () => {
-    if (!filePreview) return null
+  // États de chargement ou erreur
+  if (loading) return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      {renderHeader()}
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Chargement des messages...</Text>
+      </View>
+    </SafeAreaView>
+  );
 
-    const isImage = filePreview.type.startsWith("image/")
-    const isPdf = filePreview.type === "application/pdf"
-
-    return (
-      <View style={styles.previewContainer}>
-        {isImage ? (
-          <Image source={{ uri: filePreview.uri }} style={styles.previewImage} />
-        ) : (
-          <View style={styles.previewFile}>
-            <MaterialIcons
-              name={isPdf ? "picture-as-pdf" : "insert-drive-file"}
-              size={24}
-              color={isPdf ? "#E44D26" : "#4285F4"}
-            />
-            <Text style={styles.previewFileName} numberOfLines={1}>
-              {filePreview.name}
-            </Text>
-          </View>
-        )}
-        <TouchableOpacity style={styles.previewCancel} onPress={cancelFilePreview}>
-          <Ionicons name="close-circle" size={24} color="#FF3B30" />
+  if (error) return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      {renderHeader()}
+      <View style={styles.errorContainer}>
+        <MaterialIcons name="error-outline" size={48} color="#FF3B30" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+          <Text style={styles.retryButtonText}>Réessayer</Text>
         </TouchableOpacity>
       </View>
-    )
-  }
-
-  // Rendu du menu d'attachement
-  const renderAttachmentMenu = () => {
-    if (!attachmentMenuVisible) return null
-
-    return (
-      <View style={styles.attachmentMenu}>
-        <TouchableOpacity style={styles.attachmentOption} onPress={handleImagePicker}>
-          <View style={[styles.attachmentIcon, { backgroundColor: "#4CD964" }]}>
-            <Ionicons name="image" size={24} color="#fff" />
-          </View>
-          <Text style={styles.attachmentText}>Image</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.attachmentOption} onPress={handleDocumentPicker}>
-          <View style={[styles.attachmentIcon, { backgroundColor: "#FF9500" }]}>
-            <Ionicons name="document-text" size={24} color="#fff" />
-          </View>
-          <Text style={styles.attachmentText}>Document</Text>
-        </TouchableOpacity>
-      </View>
-    )
-  }
-
-  // Rendu de la visionneuse d'image
-  const renderImageViewer = () => {
-    if (!imageViewerVisible || !selectedImage) return null
-
-    return (
-      <Modal visible={imageViewerVisible} transparent={true} onRequestClose={() => setImageViewerVisible(false)}>
-        <View style={styles.imageViewerContainer}>
-          <TouchableOpacity style={styles.imageViewerClose} onPress={() => setImageViewerVisible(false)}>
-            <Ionicons name="close" size={28} color="#fff" />
-          </TouchableOpacity>
-
-          <Image source={{ uri: selectedImage }} style={styles.imageViewerImage} resizeMode="contain" />
-
-          <TouchableOpacity
-            style={styles.imageViewerDownload}
-            onPress={() => {
-              downloadFile(selectedImage)
-              setImageViewerVisible(false)
-            }}
-          >
-            <Ionicons name="download" size={28} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    )
-  }
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        {renderHeader()}
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des messages...</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        {renderHeader()}
-        <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={48} color="#FF3B30" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    )
-  }
+    </SafeAreaView>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -610,47 +290,47 @@ const ChatScreen: React.FC = () => {
         style={styles.container}
       >
         {renderHeader()}
-
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item.timestamp.toString()}
-          renderItem={renderMessage}
+          keyExtractor={(item) => item.id || item.timestamp.toString()}
+          renderItem={({ item }) => (
+            <MessageRenderer
+              message={item}
+              isCurrentUser={item.senderId === user?.uid}
+              onDownload={downloadFile}
+              onDelete={handleDeleteMessage}
+              downloadingFile={downloadingFile}
+            />
+          )}
           contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => {
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: false })
-            }
-          }}
-          onLayout={() => {
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: false })
-            }
-          }}
+          onContentSizeChange={() => !lastVisible && flatListRef.current?.scrollToEnd({ animated: false })}
+          onEndReached={loadMoreMessages}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color="#007AFF" /> : null}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="chat-outline" size={64} color="#ccc" />
               <Text style={styles.emptyText}>Aucun message. Commencez la conversation !</Text>
             </View>
           }
         />
-
-        {renderFilePreview()}
-        {renderAttachmentMenu()}
-
+        <FilePreview file={filePreview} onCancel={() => setFilePreview(null)} />
+        <AttachmentMenu
+          visible={attachmentMenuVisible}
+          onImagePick={handleImagePicker}
+          onDocPick={handleDocumentPicker}
+          onClose={() => setAttachmentMenuVisible(false)}
+        />
         <View style={styles.inputContainer}>
           <TouchableOpacity
-            onPress={toggleAttachmentMenu}
+            onPress={() => setAttachmentMenuVisible(true)}
             style={styles.attachButton}
-            accessibilityLabel="Ajouter un fichier"
-            accessibilityRole="button"
             disabled={isUploading}
           >
             <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
           </TouchableOpacity>
-
           <TextInput
             ref={inputRef}
             style={styles.input}
@@ -662,7 +342,6 @@ const ChatScreen: React.FC = () => {
             maxLength={1000}
             editable={!isUploading}
           />
-
           <TouchableOpacity
             onPress={handleSend}
             style={[styles.sendButton, !input.trim() && !filePreview && styles.sendButtonDisabled]}
@@ -676,21 +355,36 @@ const ChatScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-
-      {renderImageViewer()}
+      <Modal visible={imageViewerVisible} transparent onRequestClose={() => setImageViewerVisible(false)}>
+        <View style={styles.imageViewerContainer}>
+          <TouchableOpacity style={styles.imageViewerClose} onPress={() => setImageViewerVisible(false)}>
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <FastImage
+            source={{ uri: selectedImage || "", cache: FastImage.cacheControl.web }}
+            style={styles.imageViewerImage}
+            resizeMode="contain"
+            onError={() => setImageViewerVisible(false)}
+          />
+          <TouchableOpacity
+            style={styles.imageViewerDownload}
+            onPress={() => {
+              if (selectedImage) downloadFile(selectedImage);
+              setImageViewerVisible(false);
+            }}
+          >
+            <Ionicons name="download" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 // Styles
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  container: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -699,114 +393,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e0e0e0",
     backgroundColor: "#fff",
   },
-  backButton: {
-    padding: 5,
-  },
-  headerInfo: {
-    marginLeft: 10,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "#666",
-  },
-  messagesList: {
-    padding: 10,
-    paddingBottom: 20,
-  },
-  messageContainer: {
-    flexDirection: "row",
-    marginVertical: 5,
-    maxWidth: "85%",
-  },
-  clientMessage: {
-    alignSelf: "flex-end",
-    marginLeft: 50,
-  },
-  adminMessage: {
-    alignSelf: "flex-start",
-    marginRight: 50,
-  },
-  avatarContainer: {
-    marginRight: 8,
-    alignSelf: "flex-end",
-  },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  messageBubble: {
-    padding: 10,
-    borderRadius: 18,
-    maxWidth: "100%",
-  },
-  clientBubble: {
-    backgroundColor: "#DCF8C6",
-    borderTopRightRadius: 4,
-  },
-  adminBubble: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    color: "#000",
-  },
-  messageTime: {
-    fontSize: 11,
-    color: "#666",
-    marginTop: 4,
-    alignSelf: "flex-end",
-  },
-  messageImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  messageActions: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    flexDirection: "row",
-  },
-  messageAction: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  fileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 4,
-  },
-  fileName: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  downloadButton: {
-    padding: 4,
-  },
+  backButton: { padding: 5 },
+  headerInfo: { marginLeft: 10 },
+  headerTitle: { fontSize: 18, fontWeight: "bold" },
+  headerSubtitle: { fontSize: 14, color: "#666" },
+  messagesList: { padding: 10, paddingBottom: 20 },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -815,11 +406,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
   },
-  attachButton: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  attachButton: { padding: 8, justifyContent: "center", alignItems: "center" },
   input: {
     flex: 1,
     borderWidth: 1,
@@ -839,31 +426,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  sendButtonDisabled: {
-    backgroundColor: "#B8B8B8",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  errorText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#FF3B30",
-    textAlign: "center",
-  },
+  sendButtonDisabled: { backgroundColor: "#B8B8B8" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 10, fontSize: 16, color: "#666" },
+  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  errorText: { marginTop: 10, fontSize: 16, color: "#FF3B30", textAlign: "center" },
   retryButton: {
     marginTop: 20,
     paddingHorizontal: 20,
@@ -871,105 +438,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     borderRadius: 8,
   },
-  retryButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    marginTop: 100,
-  },
-  emptyText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-  },
-  previewContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    padding: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-  },
-  previewImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  previewFile: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 8,
-    flex: 1,
-  },
-  previewFileName: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  previewCancel: {
-    padding: 8,
-  },
-  attachmentMenu: {
-    position: "absolute",
-    bottom: 70,
-    left: 10,
-    right: 10,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  attachmentOption: {
-    alignItems: "center",
-    width: 80,
-  },
-  attachmentIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  attachmentText: {
-    fontSize: 12,
-  },
+  retryButtonText: { color: "#fff", fontWeight: "bold" },
+  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  emptyText: { fontSize: 16, color: "#666", textAlign: "center" },
   imageViewerContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",
     justifyContent: "center",
     alignItems: "center",
   },
-  imageViewerImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH,
-  },
-  imageViewerClose: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    zIndex: 10,
-  },
-  imageViewerDownload: {
-    position: "absolute",
-    bottom: 40,
-    right: 20,
-    zIndex: 10,
-  },
-})
+  imageViewerImage: { width: SCREEN_WIDTH, height: SCREEN_WIDTH },
+  imageViewerClose: { position: "absolute", top: 40, right: 20, zIndex: 10 },
+  imageViewerDownload: { position: "absolute", bottom: 40, right: 20, zIndex: 10 },
+});
 
-export default ChatScreen
+export default ChatScreen;

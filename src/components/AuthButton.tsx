@@ -1,30 +1,48 @@
 import React from "react";
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthButtonProps } from "../types/AuthButtonProps";
 
-const AuthButton = ({ onPress, isLoading, isLogin }: AuthButtonProps) => (
-  <TouchableOpacity
-    onPress={onPress}
-    disabled={isLoading}
-    style={[styles.button, isLoading ? styles.buttonPressed : null]}
-  >
-    <LinearGradient
-      colors={["#6366f1", "#4f46e5"]}
-      style={styles.gradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
+const AuthButton: React.FC<AuthButtonProps> = ({ onPress, isLoading, isLogin }) => {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={isLoading}
+      style={[styles.button, isLoading ? styles.buttonPressed : null]}
+      accessibilityLabel={isLogin ? "Se connecter" : "Créer un compte"}
+      accessibilityRole="button"
     >
-      {isLoading ? (
-        <ActivityIndicator color="#fff" />
-      ) : (
-        <Text style={styles.buttonText}>
-          {isLogin ? "Se connecter" : "Créer un compte"}
-        </Text>
-      )}
-    </LinearGradient>
-  </TouchableOpacity>
-);
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <LinearGradient
+          colors={["#6366f1" as const, "#4f46e5" as const]}
+          style={styles.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.buttonText}>
+              {isLogin ? "Se connecter" : "Créer un compte"}
+            </Text>
+          )}
+        </LinearGradient>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   button: {

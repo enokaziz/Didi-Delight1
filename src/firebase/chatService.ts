@@ -1,4 +1,3 @@
-// src/firebase/chatService.ts
 import {
   collection,
   addDoc,
@@ -6,8 +5,6 @@ import {
   orderBy,
   onSnapshot,
   getDocs,
-  FirestoreError,
-  DocumentData,
   deleteDoc,
   doc,
   limit,
@@ -15,45 +12,31 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-// Ajouter ces fonctions
-export const deleteMessage = async (chatId: string, messageId: string) => {
-  await deleteDoc(doc(db, "chats", chatId, "messages", messageId));
-};
-
-export const fetchPreviousMessages = async (chatId: string, lastVisible: any) => {
-  const q = query(
-    collection(db, "chats", chatId, "messages"),
-    orderBy("timestamp", "desc"),
-    startAfter(lastVisible),
-    limit(15)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-};
-
-/**
- * Interface décrivant un message de chat.
- */
 export interface ChatMessage {
-  id?: string; 
+  id?: string;
   senderId: string;
   receiverId: string;
   message: string;
   timestamp: number;
+  type?: "text" | "image" | "pdf" | "file";
+  status?: "pending" | "sent" | "read";
 }
 
-/**
- * Envoie un message dans une conversation.
- */
-
 export const sendMessage = async (
-chatId: string, senderId: string, receiverId: string, message: string, type: string): Promise<void> => {
+  chatId: string,
+  senderId: string,
+  receiverId: string,
+  message: string,
+  type: string = "text"
+): Promise<void> => {
   try {
     await addDoc(collection(db, "chats", chatId, "messages"), {
       senderId,
       receiverId,
       message,
       timestamp: Date.now(),
+      type,
+      status: "pending",
     });
   } catch (error) {
     console.error("Erreur lors de l'envoi du message:", error);
@@ -61,25 +44,40 @@ chatId: string, senderId: string, receiverId: string, message: string, type: str
   }
 };
 
-
-/**
- * Souscrit en temps réel aux messages d'une conversation.
- */
 export const subscribeToChat = (
-chatId: string, callback: (messages: ChatMessage[]) => void, p0: (error: any) => void): (() => void) => {
+  chatId: string,
+  callback: (messages: ChatMessage[]) => void,
+  onError: (error: any) => void
+): (() => void) => {
   const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
-  return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ChatMessage[];
-    callback(messages);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const messages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ChatMessage[];
+      callback(messages);
+    },
+    onError
+  );
 };
 
-/**
- * Interface décrivant une conversation (chat) dans Firestore.
- */
+export const deleteMessage = async (chatId: string, messageId: string): Promise<void> => {
+  await deleteDoc(doc(db, "chats", chatId, "messages", messageId));
+};
+
+export const fetchPreviousMessages = async (chatId: string, lastVisible: any): Promise<ChatMessage[]> => {
+  const q = query(
+    collection(db, "chats", chatId, "messages"),
+    orderBy("timestamp", "desc"),
+    startAfter(lastVisible),
+    limit(15)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as ChatMessage[];
+};
+
 export interface Chat {
   id: string;
   clientId: string;
@@ -87,9 +85,6 @@ export interface Chat {
   lastMessageTimestamp: number;
 }
 
-/**
- * Récupère toutes les conversations (chats) depuis Firestore.
- */
 export const getAllChats = async (): Promise<Chat[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, "chats"));

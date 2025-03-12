@@ -3,14 +3,9 @@ import { View, TextInput, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { EmailInputProps } from "../types/EmailInputProps";
 
-const EmailInput = ({ value, onChange, error }: EmailInputProps) => (
-  <View style={styles.inputContainer}>
-    <Ionicons
-      name="mail-outline"
-      size={20}
-      color="#6c757d"
-      style={styles.inputIcon}
-    />
+const EmailInput: React.FC<EmailInputProps> = ({ value, onChange, error }) => (
+  <View style={[styles.inputContainer, error ? styles.inputError : null]}>
+    <Ionicons name="mail-outline" size={20} color="#6c757d" style={styles.inputIcon} />
     <TextInput
       placeholder="Adresse email"
       value={value}
@@ -19,6 +14,8 @@ const EmailInput = ({ value, onChange, error }: EmailInputProps) => (
       placeholderTextColor="#6c757d"
       keyboardType="email-address"
       autoCapitalize="none"
+      accessibilityLabel="Champ d'entrée de l'email"
+      accessibilityHint="Entrez votre adresse email"
     />
   </View>
 );
@@ -37,6 +34,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
+  inputError: {
+    borderWidth: 1,
+    borderColor: "#dc3545",
+  },
   inputIcon: { marginRight: 10 },
   input: {
     flex: 1,
@@ -46,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmailInput;
+export default React.memo(EmailInput);

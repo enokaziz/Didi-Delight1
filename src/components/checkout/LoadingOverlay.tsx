@@ -1,27 +1,26 @@
 import React from 'react';
-import { Animated, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Animated, View, Text, StyleSheet } from 'react-native';
 import * as Progress from 'react-native-progress';
 
 type Props = {
   visible: boolean;
-  animations: {
-    opacity: Animated.Value;
-    scale: Animated.Value;
-  };
+  animations: { opacity: Animated.Value; scale: Animated.Value };
   message?: string;
 };
 
-const LoadingOverlay = ({ visible, animations, message = "Traitement..." }: Props) => (
-  <Animated.View style={[
-    styles.loadingOverlay,
-    {
-      opacity: animations.opacity,
-      transform: [{ scale: animations.scale }]
-    }
-  ]}>
+const LoadingOverlay = ({ visible, animations, message = 'Traitement...' }: Props) => (
+  <Animated.View
+    style={[
+      styles.loadingOverlay,
+      {
+        opacity: animations.opacity,
+        transform: [{ scale: animations.scale }],
+      },
+    ]}
+  >
     {visible && (
       <View style={styles.loadingContent}>
-        <Progress.CircleSnail color={["#FF4952"]} size={80} thickness={3} />
+        <Progress.CircleSnail color={['#FF4952']} size={80} thickness={3} />
         <Text style={styles.loadingText}>{message}</Text>
       </View>
     )}
@@ -29,7 +28,7 @@ const LoadingOverlay = ({ visible, animations, message = "Traitement..." }: Prop
 );
 
 const styles = StyleSheet.create({
-  loadingOverlay: { 
+  loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -45,18 +44,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 25,
     borderRadius: 15,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
   },
-  loadingText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: '#495057',
-    fontWeight: '500',
-  }
+  loadingText: { marginTop: 15, fontSize: 16, color: '#495057', fontWeight: '500' },
 });
 
 export default LoadingOverlay;

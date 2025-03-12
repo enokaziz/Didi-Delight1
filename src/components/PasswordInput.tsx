@@ -3,14 +3,17 @@ import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { PasswordInputProps } from "../types/PasswordInputProps";
 
-const PasswordInput = ({
+// Typage strict pour les icônes Ionicons utilisées
+type IoniconsName = "lock-closed-outline" | "eye" | "eye-off";
+
+const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
   onChange,
   showPassword,
   toggleShowPassword,
   error,
-}: PasswordInputProps) => (
-  <View style={styles.inputContainer}>
+}) => (
+  <View style={[styles.inputContainer, error ? styles.inputError : null]}>
     <Ionicons
       name="lock-closed-outline"
       size={20}
@@ -24,8 +27,15 @@ const PasswordInput = ({
       secureTextEntry={!showPassword}
       style={styles.input}
       placeholderTextColor="#6c757d"
+      accessibilityLabel="Champ de mot de passe"
+      accessibilityHint="Entrez votre mot de passe"
     />
-    <TouchableOpacity onPress={toggleShowPassword} style={styles.eyeIcon}>
+    <TouchableOpacity
+      onPress={toggleShowPassword}
+      style={styles.eyeIcon}
+      accessibilityLabel={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      accessibilityRole="button"
+    >
       <Ionicons
         name={showPassword ? "eye-off" : "eye"}
         size={20}
@@ -49,7 +59,13 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  inputIcon: { marginRight: 10 },
+  inputError: {
+    borderWidth: 1,
+    borderColor: "#dc3545", // Rouge pour indiquer une erreur
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
   input: {
     flex: 1,
     paddingVertical: 18,
@@ -61,4 +77,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PasswordInput;
+export default React.memo(PasswordInput);

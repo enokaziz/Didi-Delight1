@@ -18,6 +18,7 @@ export type RootStackParamList = {
   OrderHistory: undefined;
   PaymentMethods: undefined;
   HelpCenter: undefined;
+  OrderDetails: { orderId: string };
 };
 
 export type AdminStackParamList = {

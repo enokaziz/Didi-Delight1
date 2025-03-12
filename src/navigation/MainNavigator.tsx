@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import ClientNavigator from "./ClientNavigator";
 import AdminNavigator from "./AdminNavigator";
+import OrderDetailsScreen from "../screens/OrderDetailsScreen";
 import { RootStackParamList } from "../navigation/types";
 
 const Stack = createStackNavigator<RootStackParamList>();

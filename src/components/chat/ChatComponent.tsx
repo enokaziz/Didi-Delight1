@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChatMessage } from '../../firebase/chatService'; // Assurez-vous d'importer le bon chemin
-import MessageBubble from '../chat/MessageBubble'; // Utilisez le composant MessageBubble que nous avons créé
+import MessageBubble from './MessageBubble'; // Utilisez le composant MessageBubble que nous avons créé
 
 interface ChatComponentProps {
   messages: ChatMessage[];

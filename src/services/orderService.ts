@@ -122,6 +122,13 @@ export const getUserOrders = async (
   }
 };
 
+export const getOrderById = async (userId: string, orderId: string): Promise<Order> => {
+  const orderRef = doc(db, `users/${userId}/orders`, orderId);
+  const orderSnap = await getDoc(orderRef);
+  if (!orderSnap.exists()) throw new Error("Commande introuvable");
+  return { id: orderSnap.id, ...orderSnap.data() } as Order;
+};
+
 /**
  * Met à jour le statut d'une commande.
  * @param orderId - L'identifiant de la commande à mettre à jour.

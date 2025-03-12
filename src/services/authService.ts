@@ -1,35 +1,38 @@
-// src/services/authService.ts
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
-
-import { Alert } from "react-native"; // Ajout de l'import pour Alert
-
-// Inscription
 
 export const register = async (email: string, password: string) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     return userCredential.user;
-  } catch (error) {
-    throw error;
+  } catch (error: any) {
+    const errorMessage = error.code === "auth/email-already-in-use"
+      ? "Cet email est déjà utilisé."
+      : error.code === "auth/invalid-email"
+      ? "Email invalide."
+      : "Erreur lors de l'inscription: " + error.message;
+    throw new Error(errorMessage);
   }
 };
 
-// Connexion
 export const login = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
-  } catch (error) {
-    throw error;
+  } catch (error: any) {
+    const errorMessage = error.code === "auth/wrong-password"
+      ? "Mot de passe incorrect."
+      : error.code === "auth/user-not-found"
+      ? "Utilisateur non trouvé."
+      : "Erreur lors de la connexion: " + error.message;
+    throw new Error(errorMessage);
   }
 };
 
-// Déconnexion
 export const logout = async () => {
   try {
     await signOut(auth);
-  } catch (error) {
-    throw error;
+  } catch (error: any) {
+    throw new Error("Erreur lors de la déconnexion: " + error.message);
   }
 };

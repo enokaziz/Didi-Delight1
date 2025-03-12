@@ -21,7 +21,11 @@
         "foregroundImage": "./assets/splash-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [ "ACCESS_FINE_LOCATION", "CAMERA", "RECEIVE_BOOT_COMPLETED" ],
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
       "package": "com.dididelight.app",
       "googleServicesFile": "./google-services.json"
     },
@@ -30,7 +34,7 @@
     },
     "plugins": [
       "@react-native-firebase/app",
-      "@react-native-firebase/auth",          
+      "@react-native-firebase/auth",
       "@react-native-firebase/messaging",
       [
         "expo-build-properties",
@@ -43,8 +47,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
-      
+      ],
+      "expo-localization"
     ]
   }
 }

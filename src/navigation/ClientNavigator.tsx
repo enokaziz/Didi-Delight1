@@ -10,9 +10,11 @@ import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen";
 import ChatScreen from "../screens/ChatScreen";
 import { CartStackNavigator } from "./CartStackNavigator";
 import { SettingsStackNavigator } from "./SettingsStackNavigator";
+import EventsNavigator from "./EventsNavigator";
+import PaymentNavigator from './PaymentNavigator';
 
 type IconConfigType = {
-  [key in "Accueil" | "Panier" | "Commandes" | "Suivi Livraison" | "Paramètres" | "Chat"]: {
+  [key in "Accueil" | "Panier" | "Commandes" | "Événements" | "Suivi Livraison" | "Paramètres" | "Chat" | "Paiement"]: {
     lib: typeof Ionicons | typeof MaterialIcons;
     name: string;
   };
@@ -22,9 +24,11 @@ const ICON_CONFIG: IconConfigType = {
   Accueil: { lib: Ionicons, name: Platform.select({ ios: "ios-home", android: "home-outline" })! },
   Panier: { lib: MaterialIcons, name: "shopping-cart" },
   Commandes: { lib: Ionicons, name: "list" },
+  "Événements": { lib: MaterialIcons, name: "event" },
   "Suivi Livraison": { lib: MaterialIcons, name: "local-shipping" },
   Paramètres: { lib: Ionicons, name: "settings" },
   Chat: { lib: Ionicons, name: "chatbubble-ellipses" },
+  Paiement: { lib: MaterialIcons, name: "payment" },
 };
 
 type IconLibrary = typeof Ionicons | typeof MaterialIcons;
@@ -85,16 +89,28 @@ const ClientNavigator = () => {
           iconScale={iconScale}
         />
       ),
-      tabBarActiveTintColor: "#EE1252",
+      tabBarActiveTintColor: "#FF4952",
       tabBarInactiveTintColor: "gray",
-      tabBarStyle: { paddingBottom: 5, height: 60, elevation: 5 },
-      tabBarLabelStyle: { fontSize: 12 },
+      tabBarStyle: {
+        paddingBottom: 5,
+        height: 60,
+        elevation: 5,
+        backgroundColor: '#FFFFFF',
+      },
+      tabBarLabelStyle: {
+        fontSize: 11,
+        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+        paddingBottom: 3,
+      },
       tabBarButton: (props: BottomTabBarButtonProps) => (
         <Pressable
           {...props}
-          style={({ pressed }) => [pressed && { opacity: 0.7 }, { padding: 5 }]}
-          onPress={(event) => {  
-            if (props.onPress) props.onPress(event);  
+          style={({ pressed }) => [
+            pressed && { opacity: 0.7 },
+            { flex: 1, justifyContent: 'center', alignItems: 'center' }
+          ]}
+          onPress={(event) => {
+            if (props.onPress) props.onPress(event);
             handleTabPress(route.name);
           }}
           accessibilityRole="button"
@@ -112,15 +128,36 @@ const ClientNavigator = () => {
 
   return (
     <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen name="Accueil" component={HomeScreen} options={{ tabBarAccessibilityLabel: "Aller à l'accueil" }} />
-      <Tab.Screen name="Panier" component={CartStackNavigator} options={{ tabBarAccessibilityLabel: "Voir le panier" }} />
-      <Tab.Screen name="Commandes" component={OrderHistoryScreen} options={{ tabBarAccessibilityLabel: "Historique des commandes" }} />
+      <Tab.Screen 
+        name="Accueil" 
+        component={HomeScreen} 
+        options={{ tabBarAccessibilityLabel: "Aller à l'accueil" }} 
+      />
+      <Tab.Screen 
+        name="Panier" 
+        component={CartStackNavigator} 
+        options={{ tabBarAccessibilityLabel: "Voir le panier" }} 
+      />
+      <Tab.Screen 
+        name="Commandes" 
+        component={OrderHistoryScreen} 
+        options={{ tabBarAccessibilityLabel: "Historique des commandes" }} 
+      />
+      <Tab.Screen
+        name="Événements"
+        component={EventsNavigator}
+        options={{ tabBarAccessibilityLabel: "Gérer les événements" }}
+      />
       <Tab.Screen
         name="Suivi Livraison"
         component={DeliveryTrackingScreen}
         options={{ tabBarAccessibilityLabel: "Suivre la livraison" }}
       />
-      <Tab.Screen name="Paramètres" component={SettingsStackNavigator} options={{ tabBarAccessibilityLabel: "Paramètres" }} />
+      <Tab.Screen 
+        name="Paramètres" 
+        component={SettingsStackNavigator} 
+        options={{ tabBarAccessibilityLabel: "Paramètres" }} 
+      />
       <Tab.Screen
         name="Chat"
         component={ChatScreen}
@@ -128,7 +165,19 @@ const ClientNavigator = () => {
           tabBarLabel: "Support",
           tabBarAccessibilityLabel: "Ouvrir le chat avec le support client",
           tabBarBadge: 2,
-          tabBarBadgeStyle: { backgroundColor: "#FF4952", color: "#fff" },
+          tabBarBadgeStyle: { 
+            backgroundColor: "#FF4952", 
+            color: "#fff",
+            fontSize: 10,
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Paiement"
+        component={PaymentNavigator}
+        options={{ 
+          title: "Paiement",
+          tabBarAccessibilityLabel: "Gérer les méthodes de paiement" 
         }}
       />
     </Tab.Navigator>

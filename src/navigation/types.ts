@@ -1,12 +1,13 @@
 import { Product } from "../types/Product";
+import { PaymentMethod } from "../types/PaymentMethod";
 
 export type RootStackParamList = {
-  Auth: undefined; // Ajouté ici
-  AuthScreen: undefined; // Déjà présent
+  Auth: undefined;
+  AuthScreen: undefined;
   ClientApp: undefined;
   AdminApp: undefined;
   AddEditProduct: { product?: Product };
-  Chat: undefined;
+  Chat: { orderId?: string };
   Checkout: undefined;
   Commandes: undefined;
   EditProfile: undefined;
@@ -17,8 +18,11 @@ export type RootStackParamList = {
   AddressesScreen: undefined;
   OrderHistory: undefined;
   PaymentMethods: undefined;
+  AddPaymentMethod: undefined;
+  EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
   OrderDetails: { orderId: string };
+  ClientTabs: undefined;
 };
 
 export type AdminStackParamList = {
@@ -27,17 +31,17 @@ export type AdminStackParamList = {
   AdminChat: { clientId: string };
   ProductManagement: undefined;
   AddEditProduct: { product?: Product };
-  Auth: undefined; // Garder cette ligne pour la compatibilité
-  AuthScreen: undefined; // Ajouté ici
+  Auth: undefined;
+  AuthScreen: undefined;
 };
 
 export type ClientStackParamList = {
   Accueil: undefined;
   Panier: undefined;
   Commandes: undefined;
-  SuiviLivraison: undefined;
+  "Suivi Livraison": undefined;
   Paramètres: undefined;
-  Chat: undefined;
+  Chat: { orderId?: string };
   Checkout: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
@@ -45,5 +49,26 @@ export type ClientStackParamList = {
   AddressesScreen: undefined;
   OrderHistory: undefined;
   PaymentMethods: undefined;
+  AddPaymentMethod: undefined;
+  EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
+  OrderDetails: { orderId: string };
+};
+
+export type PaymentStackParamList = {
+  PaymentMethods: undefined;
+  AddPaymentMethod: undefined;
+  EditPaymentMethod: { paymentMethod: PaymentMethod };
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+};
+
+export type EventsStackParamList = {
+  EventsList: undefined;
+  EventDetails: { eventId: string };
+  CreateEvent: undefined;
 };

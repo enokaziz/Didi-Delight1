@@ -1,16 +1,20 @@
 // src/navigation/MainNavigator.tsx
 import React from "react";
 import { View, ActivityIndicator } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useAuth } from "../contexts/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import ClientNavigator from "./ClientNavigator";
 import AdminNavigator from "./AdminNavigator";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
+import MyAccountScreen from '../screens/MyAccountScreen';
+import PromotionsScreen from '../screens/PromotionsScreen';
+import InventoryScreen from '../screens/InventoryScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList } from "../navigation/types";
 
 const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
 const MainNavigator = () => {
   const { user, userRole, loading } = useAuth();
@@ -23,20 +27,29 @@ const MainNavigator = () => {
     );
   }
 
+  const routeName: keyof RootStackParamList = 'ClientTabs';
+
   return (
-    <NavigationContainer>
-       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!user ? (
-        <Stack.Screen name="Auth" component={AuthNavigator} /> 
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user ? (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      ) : userRole === "admin" ? (
+        <Stack.Screen name="AdminApp" component={AdminNavigator} />
+      ) : (
+        <Stack.Screen name="ClientApp" component={ClientNavigator} />
+      )}
+      <Stack.Screen name="ClientTabs" component={ClientTabs} />
+    </Stack.Navigator>
+  );
+};
 
-
-        ) : userRole === "admin" ? (
-          <Stack.Screen name="AdminApp" component={AdminNavigator} />
-        ) : (
-          <Stack.Screen name="ClientApp" component={ClientNavigator} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+const ClientTabs = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Mon Compte" component={MyAccountScreen} />
+      <Tab.Screen name="Promotions" component={PromotionsScreen} />
+      <Tab.Screen name="Inventaire" component={InventoryScreen} />
+    </Tab.Navigator>
   );
 };
 

@@ -96,6 +96,7 @@ const AddEditProductScreen: React.FC = () => {
         price: parseFloat(price.replace(',', '.')),
         category,
         image,
+        quantity: product?.quantity || 0, // Ajoutez une quantité par défaut si nécessaire
         description: 'Description du produit', // Ajoutez une description par défaut si nécessaire
         isPromotional: product?.isPromotional || false, // Valeur par défaut pour `isPromotional`
         isPopular: product?.isPopular || false, // Valeur par défaut pour `isPopular`

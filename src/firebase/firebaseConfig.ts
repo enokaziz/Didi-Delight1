@@ -2,15 +2,20 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { FIREBASE_API, 
+  FIREBASE_AUTH_DOMAIN, 
+  FIREBASE_ROJECT_ID, 
+  FIREBASE_STORAGE_BUCKET, 
+  FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_MEASUREMENT_ID} from '@env';
 
 const firebaseConfig = { 
-  apiKey: "AIzaSyB65LTTfgvKkUO2LM7EbB5dJDSbB10kka8",
-  authDomain: "didi-delight.firebaseapp.com",
-  projectId: "didi-delight",
-  storageBucket: "didi-delight.firebasestorage.app",
-  messagingSenderId: "747650559227",
-  appId: "1:747650559227:web:c966d7d1be3dadbb39d45e",
-  measurementId: "G-WVTPK4FV5S",
+  apiKey: FIREBASE_API,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_ROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID,
+  measurementId: FIREBASE_MEASUREMENT_ID
 };
 
 // Initialisation de Firebase

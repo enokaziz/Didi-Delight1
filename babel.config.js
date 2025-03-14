@@ -4,6 +4,14 @@ module.exports = function(api) {
     presets: ['babel-preset-expo'],
     plugins: [
       [
+        ['module:react-native-dotenv',
+          {'moduleName': '@env',
+            'path': '.env',
+            'safe': true,
+            'allowUndefined': false,
+
+          }
+        ],
         'module-resolver',
         {
           root: ['./src'],
@@ -13,6 +21,7 @@ module.exports = function(api) {
             "@utils": "./src/utils",
             "@assets": "./src/assets",
             "@constants": "./src/constants",
+
             
             // Ajoute ici d'autres alias si nécessaire
           },

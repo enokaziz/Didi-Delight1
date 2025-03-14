@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { FlatList, Text, View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Product } from '../types/Product';
 
 interface ProductListProps {
@@ -28,12 +28,23 @@ const ProductList: React.FC<ProductListProps> = ({ products, onEdit, onDelete })
         <TouchableOpacity style={styles.editButton} onPress={() => onEdit(item)}>
           <Text style={styles.buttonText}>Modifier</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(item.id)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
           <Text style={styles.buttonText}>Supprimer</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+
+  const handleDelete = (productId: string) => {
+    Alert.alert(
+      'Confirmation',
+      'Êtes-vous sûr de vouloir supprimer ce produit ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', onPress: () => onDelete(productId) },
+      ]
+    );
+  };
 
   return (
     <FlatList

@@ -79,7 +79,8 @@
     "socket.io-client": "^4.8.1",
     "uuid": "^11.1.0",
     "yup": "^1.6.1",
-    "expo-localization": "~16.0.1"
+    "expo-localization": "~16.0.1",
+    "expo-local-authentication": "~15.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

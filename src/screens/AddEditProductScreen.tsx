@@ -34,6 +34,7 @@ const AddEditProductScreen: React.FC = () => {
   const [price, setPrice] = useState(product?.price ? String(product.price) : '');
   const [category, setCategory] = useState(product?.category || '');
   const [image, setImage] = useState(product?.image || '');
+  const [description, setDescription] = useState(product?.description || '');
   const [isLoading, setIsLoading] = useState(false);
 
   // Fonction pour sélectionner une image
@@ -57,7 +58,14 @@ const AddEditProductScreen: React.FC = () => {
             text2: response.errorMessage,
           });
         } else if (response.assets && response.assets.length > 0) {
-          // Mettre à jour l'URL de l'image avec le chemin sélectionné
+          if (!response.assets[0].uri) {
+            Toast.show({
+              type: 'error',
+              text1: 'Erreur',
+              text2: 'Échec du téléchargement de l’image.',
+            });
+            return;
+          }
           setImage(response.assets[0].uri || '');
         }
       }
@@ -80,6 +88,15 @@ const AddEditProductScreen: React.FC = () => {
       return;
     }
 
+    if (!['Gâteaux', 'Plats', 'Jus'].includes(category)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: 'Veuillez sélectionner une catégorie valide.',
+      });
+      return;
+    }
+
     if (!isValidPrice(price)) {
       Toast.show({
         type: 'error',
@@ -96,8 +113,8 @@ const AddEditProductScreen: React.FC = () => {
         price: parseFloat(price.replace(',', '.')),
         category,
         image,
+        description,
         quantity: product?.quantity || 0, // Ajoutez une quantité par défaut si nécessaire
-        description: 'Description du produit', // Ajoutez une description par défaut si nécessaire
         isPromotional: product?.isPromotional || false, // Valeur par défaut pour `isPromotional`
         isPopular: product?.isPopular || false, // Valeur par défaut pour `isPopular`
       };
@@ -154,8 +171,16 @@ const AddEditProductScreen: React.FC = () => {
         placeholder="Catégorie"
         value={category}
         onChangeText={setCategory}
-        style={styles.input}
+        style={[styles.input, !category && { borderColor: COLORS.error }]}
         accessibilityLabel="Catégorie du produit"
+      />
+
+      <TextInput
+        placeholder="Description du produit"
+        value={description}
+        onChangeText={setDescription}
+        style={styles.input}
+        accessibilityLabel="Description du produit"
       />
 
       <TouchableOpacity style={styles.imageButton} onPress={handleSelectImage}>

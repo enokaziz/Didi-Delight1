@@ -7,6 +7,10 @@ import AdminChatScreen from "../screens/admin/AdminChatScreen";
 import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
 import ProductManagementScreen from "../screens/ProductManagementScreen";
 import AddEditProductScreen from "../screens/AddEditProductScreen";
+import EventManagementScreen from "../screens/admin/EventManagementScreen"; // Ajout
+import PromotionManagementScreen from "../screens/admin/PromotionManagementScreen"; // Ajout
+import InventoryManagementScreen from "../screens/admin/InventoryManagementScreen"; // Ajout
+import LoyaltyPointsManagementScreen from "../screens/admin/LoyaltyPointsManagementScreen"; // Ajout
 
 const Stack = createStackNavigator<AdminStackParamList>();
 
@@ -44,6 +48,26 @@ const AdminNavigator = () => {
         name="AddEditProduct"
         component={AddEditProductScreen}
         options={{ title: "Modifier Produit" }}
+      />
+      <Stack.Screen
+        name="EventManagement"
+        component={EventManagementScreen}
+        options={{ title: "Gestion des Événements" }}
+      />
+      <Stack.Screen
+        name="PromotionManagement"
+        component={PromotionManagementScreen}
+        options={{ title: "Gestion des Promotions" }}
+      />
+      <Stack.Screen
+        name="InventoryManagement"
+        component={InventoryManagementScreen}
+        options={{ title: "Gestion de l'Inventaire" }}
+      />
+      <Stack.Screen
+        name="LoyaltyPointsManagement"
+        component={LoyaltyPointsManagementScreen}
+        options={{ title: "Gestion des Points de Fidélité" }}
       />
     </Stack.Navigator>
   );

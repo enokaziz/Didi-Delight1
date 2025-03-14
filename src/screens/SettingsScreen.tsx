@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Linking, Platform, Alert } from "react-native"
@@ -22,6 +20,7 @@ import type { RootStackParamList } from "../navigation/types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as Notifications from "expo-notifications"
 import Constants from "expo-constants"
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const APP_VERSION = (Constants.manifest as any)?.version || "1.0.0"
 
@@ -113,14 +112,29 @@ const SettingsScreen: React.FC = () => {
   // Gérer le changement d'authentification biométrique
   const handleBiometricToggle = async () => {
     try {
-      // Ici, vous pourriez vérifier si l'appareil prend en charge la biométrie
-      const newValue = !biometricEnabled
-      setBiometricEnabled(newValue)
-      await AsyncStorage.setItem("biometricEnabled", newValue.toString())
-      showSnackbar(newValue ? "Authentification biométrique activée" : "Authentification biométrique désactivée")
+      const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+      if (!isBiometricAvailable) {
+        showSnackbar("L'authentification biométrique n'est pas disponible sur cet appareil.");
+        return;
+      }
+
+      const newValue = !biometricEnabled;
+      if (newValue) {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Authentifiez-vous pour activer la biométrie',
+        });
+        if (!result.success) {
+          showSnackbar("Échec de l'authentification biométrique.");
+          return;
+        }
+      }
+
+      setBiometricEnabled(newValue);
+      await AsyncStorage.setItem("biometricEnabled", newValue.toString());
+      showSnackbar(newValue ? "Authentification biométrique activée" : "Authentification biométrique désactivée");
     } catch (error) {
-      console.error("Erreur lors de la modification de l'authentification biométrique :", error)
-      showSnackbar("Erreur lors de la modification des paramètres biométriques")
+      console.error("Erreur lors de la modification de l'authentification biométrique :", error);
+      showSnackbar("Erreur lors de la modification des paramètres biométriques");
     }
   }
 

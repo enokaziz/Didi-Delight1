@@ -92,3 +92,5 @@ export const deleteProduct = async (productId: string): Promise<void> => {
     throw new Error('Échec de la suppression du produit. Veuillez réessayer.');
   }
 };
+
+export { Product };

@@ -4,23 +4,37 @@ import { promotionService, Promotion } from '../services/promotions/promotionSer
 
 const PromotionsScreen = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchPromotions = async () => {
-      const activePromotions = await promotionService.getActivePromotions();
-      setPromotions(activePromotions);
+      try {
+        setLoading(true);
+        const activePromotions = await promotionService.getActivePromotions();
+        setPromotions(activePromotions);
+      } catch (err) {
+        setError('Erreur lors du chargement des promotions');
+      } finally {
+        setLoading(false);
+      }
     };
     fetchPromotions();
   }, []);
 
   const applyPromotion = async (promotion: Promotion) => {
-    if (!promotion) return;
-    const success = await promotionService.incrementUsageCount(promotion.id);
-    if (success) {
+    if (promotion.usageLimit && (promotion.usageCount ?? 0) >= promotion.usageLimit) {
+      alert(`La promotion ${promotion.title} a atteint sa limite d'utilisation.`);
+      return;
+    }
+    try {
+      await promotionService.incrementUsageCount(promotion.id);
+      setPromotions(prev => prev.map(p => p.id === promotion.id ? { ...p, usageCount: (p.usageCount ?? 0) + 1 } : p));
       alert(`Promotion ${promotion.title} appliquée avec succès!`);
+    } catch (error) {
+      alert('Erreur lors de l\'application de la promotion');
     }
   };
-
   const title = promotions[0]?.title;
   const description = promotions[0]?.description;
   const id = promotions[0]?.id;

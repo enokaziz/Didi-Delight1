@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert, FlatList } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { sendMessage, subscribeToChat, deleteMessage, ChatMessage } from "../../firebase/chatService";
 import ChatCore from "../../components/chat/ChatCore";
 import { AdminStackParamList } from "navigation/types";
+import MessageRenderer from "../../components/chat/MessageRenderer";
 
 type AdminChatScreenRouteProp = RouteProp<AdminStackParamList, "AdminChat">;
 
@@ -13,6 +14,7 @@ const AdminChatScreen: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   const chatId = `${clientId}-admin`;
 
@@ -26,6 +28,7 @@ const AdminChatScreen: React.FC = () => {
           status: message.status || "sent",
         }));
         setMessages(validatedMessages);
+        setChatHistory((prev) => [...prev, ...validatedMessages]);
       },
       (error) => Alert.alert("Erreur", error.message)
     );
@@ -49,6 +52,7 @@ const AdminChatScreen: React.FC = () => {
     try {
       await deleteMessage(chatId, messageId);
       setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      setChatHistory((prev) => prev.filter((msg) => msg.id !== messageId));
     } catch (error) {
       Alert.alert("Erreur", "Impossible de supprimer le message.");
     }
@@ -57,6 +61,15 @@ const AdminChatScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Chat avec le client {clientId}</Text>
+      {chatHistory.length > 0 && (
+        <FlatList
+          data={chatHistory}
+          renderItem={({ item }) => (
+            <MessageRenderer message={item} isCurrentUser={item.senderId === "admin"} />
+          )}
+          keyExtractor={(item) => item.id || item.timestamp.toString()}
+        />
+      )}
       <ChatCore
         messages={messages}
         input={input}

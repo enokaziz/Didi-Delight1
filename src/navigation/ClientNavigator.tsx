@@ -1,187 +1,301 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { RouteProp } from "@react-navigation/native";
-import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Platform, Animated, Pressable } from "react-native";
-import HomeScreen from "../screens/HomeScreen";
-import OrderHistoryScreen from "../screens/OrderHistoryScreen";
-import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen";
-import ChatScreen from "../screens/ChatScreen";
-import { CartStackNavigator } from "./CartStackNavigator";
-import { SettingsStackNavigator } from "./SettingsStackNavigator";
-import EventsNavigator from "./EventsNavigator";
-import PaymentNavigator from './PaymentNavigator';
+"use client"
+
+import { useRef, useState, useCallback } from "react"
+import { createDrawerNavigator } from "@react-navigation/drawer"
+import { Ionicons, MaterialIcons } from "@expo/vector-icons"
+import { Animated, Pressable, View, Text, StyleSheet } from "react-native"
+import HomeScreen from "../screens/HomeScreen"
+import OrderHistoryScreen from "../screens/OrderHistoryScreen"
+import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen"
+import ChatScreen from "../screens/ChatScreen"
+import { CartStackNavigator } from "./CartStackNavigator"
+import { SettingsStackNavigator } from "./SettingsStackNavigator"
+import EventsNavigator from "./EventsNavigator"
+import PaymentNavigator from "./PaymentNavigator"
+
+// Style 7: Ludique et Coloré - Sidebar Version
 
 type IconConfigType = {
   [key in "Accueil" | "Panier" | "Commandes" | "Événements" | "Suivi Livraison" | "Paramètres" | "Chat" | "Paiement"]: {
-    lib: typeof Ionicons | typeof MaterialIcons;
-    name: string;
-  };
-};
-
-const ICON_CONFIG: IconConfigType = {
-  Accueil: { lib: Ionicons, name: Platform.select({ ios: "ios-home", android: "home-outline" })! },
-  Panier: { lib: MaterialIcons, name: "shopping-cart" },
-  Commandes: { lib: Ionicons, name: "list" },
-  "Événements": { lib: MaterialIcons, name: "event" },
-  "Suivi Livraison": { lib: MaterialIcons, name: "local-shipping" },
-  Paramètres: { lib: Ionicons, name: "settings" },
-  Chat: { lib: Ionicons, name: "chatbubble-ellipses" },
-  Paiement: { lib: MaterialIcons, name: "payment" },
-};
-
-type IconLibrary = typeof Ionicons | typeof MaterialIcons;
-
-const getIcon = (Lib: IconLibrary, name: string | undefined, color: string, size: number) => {
-  const IconComponent = Lib;
-  if (!name || !IconComponent) {
-    console.warn(`Icône manquante pour ${name}`);
-    return <MaterialIcons name="error-outline" size={size} color="red" />;
+    lib: typeof Ionicons | typeof MaterialIcons
+    name: string
+    color: string
   }
-  return <IconComponent name={name as any} size={size} color={color} />;
-};
-
-const Tab = createBottomTabNavigator();
-
-interface TabBarIconProps {
-  focused: boolean;
-  color: string;
-  size: number;
 }
 
-const TabBarIcon: React.FC<TabBarIconProps & { routeName: keyof typeof ICON_CONFIG; iconScale: Animated.Value }> = React.memo(
-  ({ focused, color, size, routeName, iconScale }) => {
-    const { lib, name } = ICON_CONFIG[routeName];
-    const iconSize = focused ? size * 1.2 : size;
-    const iconColor = focused ? "#FF4952" : "gray";
+const ICON_CONFIG: IconConfigType = {
+  Accueil: { lib: Ionicons, name: "home", color: "#FF6B6B" },
+  Panier: { lib: Ionicons, name: "cart", color: "#4ECDC4" },
+  Commandes: { lib: Ionicons, name: "list", color: "#FFD166" },
+  Événements: { lib: Ionicons, name: "calendar", color: "#118AB2" },
+  "Suivi Livraison": { lib: Ionicons, name: "bicycle", color: "#073B4C" },
+  Paramètres: { lib: Ionicons, name: "settings", color: "#06D6A0" },
+  Chat: { lib: Ionicons, name: "chatbubbles", color: "#FF9F1C" },
+  Paiement: { lib: Ionicons, name: "card", color: "#8338EC" },
+}
 
-    return (
-      <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-        {name && getIcon(lib, name, iconColor, iconSize)}
-      </Animated.View>
-    );
+type IconLibrary = typeof Ionicons | typeof MaterialIcons
+
+const getIcon = (Lib: IconLibrary, name: string | undefined, color: string, size: number) => {
+  const IconComponent = Lib
+  if (!name || !IconComponent) {
+    console.warn(`Icône manquante pour ${name}`)
+    return <MaterialIcons name="error-outline" size={size} color="red" />
   }
-);
+  return <IconComponent name={name as any} size={size} color={color} />
+}
 
-const ClientNavigator = () => {
-  const iconScale = useRef(new Animated.Value(1)).current;
-  const [focusedRouteName, setFocusedRouteName] = useState<string>("Accueil");
-  const [currentRouteName, setCurrentRouteName] = useState<string>("Accueil");
+const Drawer = createDrawerNavigator()
 
-  const handleTabPress = useCallback((routeName: string) => {
-    Animated.sequence([
-      Animated.timing(iconScale, { toValue: 1.1, duration: 100, useNativeDriver: true }),
-      Animated.timing(iconScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
-    setCurrentRouteName(routeName);
-  }, [iconScale]);
+// Custom drawer content component
+const CustomDrawerContent = ({ navigation, state }: any) => {
+  const [focusedRouteName, setFocusedRouteName] = useState<string>("Accueil")
+  const iconScale = useRef(new Animated.Value(1)).current
 
-  const screenOptions = useMemo(
-    () => ({ route }: { route: RouteProp<any, any> }) => ({
-      headerShown: false,
-      tabBarIcon: ({ focused, color, size }: TabBarIconProps) => (
-        <TabBarIcon
-          focused={focused}
-          color={color}
-          size={size}
-          routeName={route.name as keyof typeof ICON_CONFIG}
-          iconScale={iconScale}
-        />
-      ),
-      tabBarActiveTintColor: "#FF4952",
-      tabBarInactiveTintColor: "gray",
-      tabBarStyle: {
-        paddingBottom: 5,
-        height: 60,
-        elevation: 5,
-        backgroundColor: '#FFFFFF',
-      },
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        paddingBottom: 3,
-      },
-      tabBarButton: (props: BottomTabBarButtonProps) => (
-        <Pressable
-          {...props}
-          style={({ pressed }) => [
-            pressed && { opacity: 0.7 },
-            { flex: 1, justifyContent: 'center', alignItems: 'center' }
-          ]}
-          onPress={(event) => {
-            if (props.onPress) props.onPress(event);
-            handleTabPress(route.name);
-          }}
-          accessibilityRole="button"
-        />
-      ),
-    }),
-    [iconScale, handleTabPress]
-  );
-
-  useEffect(() => {
-    if (currentRouteName) {
-      setFocusedRouteName(currentRouteName);
-    }
-  }, [currentRouteName]);
+  const handleNavigation = useCallback(
+    (routeName: string) => {
+      Animated.sequence([
+        Animated.timing(iconScale, { toValue: 1.4, duration: 200, useNativeDriver: true }),
+        Animated.timing(iconScale, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start()
+      setFocusedRouteName(routeName)
+      navigation.navigate(routeName)
+    },
+    [navigation, iconScale],
+  )
 
   return (
-    <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen 
-        name="Accueil" 
-        component={HomeScreen} 
-        options={{ tabBarAccessibilityLabel: "Aller à l'accueil" }} 
+    <View style={styles.drawerContainer}>
+      <View style={styles.drawerHeader}>
+        <Text style={styles.drawerTitle}>Pâtisserie</Text>
+        <Text style={styles.drawerSubtitle}>Délices & Gourmandises</Text>
+      </View>
+
+      <View style={styles.drawerContent}>
+        {Object.entries(ICON_CONFIG).map(([routeName, { lib, name, color }]) => {
+          const isFocused = routeName === focusedRouteName
+          const iconColor = isFocused ? color : "#6c757d"
+          const iconSize = isFocused ? 24 : 22
+
+          // Check for chat notifications
+          const hasBadge = routeName === "Chat"
+
+          return (
+            <Pressable
+              key={routeName}
+              style={[styles.drawerItem, isFocused && { ...styles.drawerItemFocused, backgroundColor: `${color}20` }]}
+              onPress={() => handleNavigation(routeName)}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: isFocused ? color : "#f8f9fa" }]}>
+                <Animated.View style={{ transform: [{ scale: isFocused ? iconScale : 1 }] }}>
+                  {getIcon(lib, name, isFocused ? "#fff" : color, iconSize)}
+                </Animated.View>
+              </View>
+              <Text style={[styles.drawerItemText, isFocused && { ...styles.drawerItemTextFocused, color }]}>
+                {routeName === "Chat" ? "Support" : routeName}
+              </Text>
+              {hasBadge && (
+                <View style={[styles.badge, { backgroundColor: color }]}>
+                  <Text style={styles.badgeText}>2</Text>
+                </View>
+              )}
+            </Pressable>
+          )
+        })}
+      </View>
+
+      <View style={styles.drawerFooter}>
+        <Pressable style={styles.logoutButton}>
+          <Ionicons name="log-out" size={20} color="#fff" />
+          <Text style={styles.logoutText}>Se déconnecter</Text>
+        </Pressable>
+      </View>
+    </View>
+  )
+}
+
+const ClientNavigator = () => {
+  return (
+    <Drawer.Navigator
+      initialRouteName="Accueil"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={({ route }) => {
+        const routeName = route.name as keyof typeof ICON_CONFIG
+        const { color } = ICON_CONFIG[routeName]
+
+        return {
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: "#FFFFFF",
+            elevation: 2,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+          },
+          headerTintColor: color,
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+          drawerStyle: {
+            backgroundColor: "#FFFFFF",
+            width: 300,
+          },
+          drawerType: "front",
+          swipeEdgeWidth: 50,
+          drawerActiveTintColor: color,
+          drawerInactiveTintColor: "#6c757d",
+        }
+      }}
+    >
+      <Drawer.Screen
+        name="Accueil"
+        component={HomeScreen}
+        options={{
+          drawerLabel: "Accueil",
+        }}
       />
-      <Tab.Screen 
-        name="Panier" 
-        component={CartStackNavigator} 
-        options={{ tabBarAccessibilityLabel: "Voir le panier" }} 
+      <Drawer.Screen
+        name="Panier"
+        component={CartStackNavigator}
+        options={{
+          drawerLabel: "Panier",
+        }}
       />
-      <Tab.Screen 
-        name="Commandes" 
-        component={OrderHistoryScreen} 
-        options={{ tabBarAccessibilityLabel: "Historique des commandes" }} 
+      <Drawer.Screen
+        name="Commandes"
+        component={OrderHistoryScreen}
+        options={{
+          drawerLabel: "Commandes",
+        }}
       />
-      <Tab.Screen
+      <Drawer.Screen
         name="Événements"
         component={EventsNavigator}
-        options={{ tabBarAccessibilityLabel: "Gérer les événements" }}
+        options={{
+          drawerLabel: "Événements",
+        }}
       />
-      <Tab.Screen
+      <Drawer.Screen
         name="Suivi Livraison"
         component={DeliveryTrackingScreen}
-        options={{ tabBarAccessibilityLabel: "Suivre la livraison" }}
+        options={{
+          drawerLabel: "Suivi Livraison",
+        }}
       />
-      <Tab.Screen 
-        name="Paramètres" 
-        component={SettingsStackNavigator} 
-        options={{ tabBarAccessibilityLabel: "Paramètres" }} 
+      <Drawer.Screen
+        name="Paramètres"
+        component={SettingsStackNavigator}
+        options={{
+          drawerLabel: "Paramètres",
+        }}
       />
-      <Tab.Screen
+      <Drawer.Screen
         name="Chat"
         component={ChatScreen}
         options={{
-          tabBarLabel: "Support",
-          tabBarAccessibilityLabel: "Ouvrir le chat avec le support client",
-          tabBarBadge: 2,
-          tabBarBadgeStyle: { 
-            backgroundColor: "#FF4952", 
-            color: "#fff",
-            fontSize: 10,
-          },
+          drawerLabel: "Support",
         }}
       />
-      <Tab.Screen
+      <Drawer.Screen
         name="Paiement"
         component={PaymentNavigator}
-        options={{ 
-          title: "Paiement",
-          tabBarAccessibilityLabel: "Gérer les méthodes de paiement" 
+        options={{
+          drawerLabel: "Paiement",
         }}
       />
-    </Tab.Navigator>
-  );
-};
+    </Drawer.Navigator>
+  )
+}
 
-export default ClientNavigator;
+const styles = StyleSheet.create({
+  drawerContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  drawerHeader: {
+    padding: 20,
+    backgroundColor: "#f8f9fa",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  drawerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#212529",
+    marginBottom: 5,
+  },
+  drawerSubtitle: {
+    fontSize: 14,
+    color: "#6c757d",
+  },
+  drawerContent: {
+    flex: 1,
+    paddingTop: 10,
+  },
+  drawerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 5,
+    borderRadius: 10,
+    marginHorizontal: 10,
+  },
+  drawerItemFocused: {
+    borderRadius: 10,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  drawerItemText: {
+    fontSize: 16,
+    marginLeft: 16,
+    color: "#6c757d",
+  },
+  drawerItemTextFocused: {
+    fontWeight: "600",
+  },
+  badge: {
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: "auto",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    paddingHorizontal: 5,
+  },
+  drawerFooter: {
+    padding: 20,
+    alignItems: "center",
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    width: "80%",
+  },
+  logoutText: {
+    color: "#fff",
+    marginLeft: 10,
+    fontWeight: "600",
+  },
+})
+
+export default ClientNavigator
+

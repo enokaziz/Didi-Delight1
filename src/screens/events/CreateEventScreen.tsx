@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform } from 'react-native';
-import { 
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Platform } from "react-native";
+import {
   Text,
   TextInput,
   Button,
@@ -12,17 +12,18 @@ import {
   IconButton,
   useTheme,
   HelperText,
-} from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Event, EventType, EventProduct } from '../../types/event';
-import { eventService } from '../../services/events/eventService';
-import { useAuth } from '../../contexts/AuthContext';
-import { EventsStackParamList } from '../../navigation/EventsNavigator';
-import * as Localization from 'expo-localization';
+} from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker"; // Importer Picker
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Event, EventType, EventProduct } from "../../types/event";
+import { eventService } from "../../services/events/eventService";
+import { useAuth } from "../../contexts/AuthContext";
+import { EventsStackParamList } from "../../navigation/EventsNavigator";
+import { getProducts, Product } from "../../firebase/productService"; // Importer depuis votre fichier
 
 type NavigationProps = StackNavigationProp<EventsStackParamList>;
 
@@ -32,19 +33,20 @@ const CreateEventScreen = () => {
   const theme = useTheme();
 
   // États du formulaire
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState<EventType>('wedding');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState<EventType>("wedding");
   const [date, setDate] = useState(new Date());
-  const [location, setLocation] = useState('');
-  const [expectedGuests, setExpectedGuests] = useState('');
-  const [specialRequirements, setSpecialRequirements] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const [location, setLocation] = useState("");
+  const [expectedGuests, setExpectedGuests] = useState("");
+  const [specialRequirements, setSpecialRequirements] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [products, setProducts] = useState<EventProduct[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]); // Produits Firestore
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<EventProduct | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false); // Ajout pour le DatePicker
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // États de validation
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -55,36 +57,39 @@ const CreateEventScreen = () => {
     quantity: string;
     specialInstructions: string;
   }>({
-    productId: '',
-    quantity: '1',
-    specialInstructions: '',
+    productId: "",
+    quantity: "1",
+    specialInstructions: "",
   });
+
+  // Charger les produits depuis Firestore
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const productsData = await getProducts(); // Utiliser votre fonction existante
+        setAvailableProducts(productsData);
+      } catch (error) {
+        console.error("Erreur lors du chargement des produits:", error);
+        setErrors((prev) => ({
+          ...prev,
+          products: "Erreur lors du chargement des produits.",
+        }));
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-
-    if (!title.trim()) {
-      newErrors.title = 'Le titre est requis';
-    }
-    if (!description.trim()) {
-      newErrors.description = 'La description est requise';
-    }
-    if (!location.trim()) {
-      newErrors.location = 'Le lieu est requis';
-    }
-    if (!expectedGuests || isNaN(Number(expectedGuests))) {
-      newErrors.expectedGuests = 'Le nombre d\'invités doit être un nombre valide';
-    }
-    if (!contactPhone.trim()) {
-      newErrors.contactPhone = 'Le numéro de téléphone est requis';
-    }
-    if (contactEmail && !/\S+@\S+\.\S+/.test(contactEmail)) {
-      newErrors.contactEmail = 'L\'email n\'est pas valide';
-    }
-    if (products.length === 0) {
-      newErrors.products = 'Veuillez ajouter au moins un produit';
-    }
-
+    if (!title.trim()) newErrors.title = "Le titre est requis";
+    if (!description.trim()) newErrors.description = "La description est requise";
+    if (!location.trim()) newErrors.location = "Le lieu est requis";
+    if (!expectedGuests || isNaN(Number(expectedGuests)))
+      newErrors.expectedGuests = "Le nombre d'invités doit être un nombre valide";
+    if (!contactPhone.trim()) newErrors.contactPhone = "Le numéro de téléphone est requis";
+    if (contactEmail && !/\S+@\S+\.\S+/.test(contactEmail))
+      newErrors.contactEmail = "L'email n'est pas valide";
+    if (products.length === 0) newErrors.products = "Veuillez ajouter au moins un produit";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -94,11 +99,12 @@ const CreateEventScreen = () => {
 
     try {
       const totalAmount = products.reduce((sum, product) => {
-        const productPrice = 5000; // Prix fictif pour l'exemple
-        return sum + (productPrice * product.quantity);
+        const productData = availableProducts.find((p) => p.id === product.productId);
+        const price = productData ? productData.price : 0;
+        return sum + price * product.quantity;
       }, 0);
 
-      const eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+      const eventData: Omit<Event, "id" | "createdAt" | "updatedAt"> = {
         userId: user.uid,
         type,
         title,
@@ -107,7 +113,7 @@ const CreateEventScreen = () => {
         location,
         expectedGuests: Number(expectedGuests),
         products,
-        status: 'pending',
+        status: "pending",
         totalAmount,
         depositPaid: false,
         specialRequirements,
@@ -116,36 +122,57 @@ const CreateEventScreen = () => {
       };
 
       const eventId = await eventService.createEvent(eventData);
-      navigation.navigate('EventDetails', { eventId });
+      navigation.navigate("EventDetails", { eventId });
     } catch (error) {
-      console.error('Erreur lors de la création de l\'événement:', error);
+      console.error("Erreur lors de la création de l'événement:", error);
     }
   };
 
   const handleAddProduct = () => {
+    const productExists = availableProducts.some((p) => p.id === currentProduct.productId);
+    if (!productExists || !currentProduct.productId) {
+      setErrors((prev) => ({
+        ...prev,
+        products: "Veuillez sélectionner un produit valide.",
+      }));
+      return;
+    }
+    if (Number(currentProduct.quantity) <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        products: "La quantité doit être supérieure à 0.",
+      }));
+      return;
+    }
+
     if (selectedProduct) {
-      // Mode édition
-      setProducts(products.map(p => 
-        p.productId === selectedProduct.productId ? {
+      setProducts(
+        products.map((p) =>
+          p.productId === selectedProduct.productId
+            ? {
+                productId: currentProduct.productId,
+                quantity: Number(currentProduct.quantity),
+                specialInstructions: currentProduct.specialInstructions,
+              }
+            : p
+        )
+      );
+    } else {
+      setProducts([
+        ...products,
+        {
           productId: currentProduct.productId,
           quantity: Number(currentProduct.quantity),
-          specialInstructions: currentProduct.specialInstructions
-        } : p
-      ));
-    } else {
-      // Nouveau produit
-      setProducts([...products, {
-        productId: currentProduct.productId,
-        quantity: Number(currentProduct.quantity),
-        specialInstructions: currentProduct.specialInstructions
-      }]);
+          specialInstructions: currentProduct.specialInstructions,
+        },
+      ]);
     }
     setShowProductDialog(false);
     setSelectedProduct(null);
     setCurrentProduct({
-      productId: '',
-      quantity: '1',
-      specialInstructions: ''
+      productId: "",
+      quantity: "1",
+      specialInstructions: "",
     });
   };
 
@@ -154,17 +181,17 @@ const CreateEventScreen = () => {
     setCurrentProduct({
       productId: product.productId,
       quantity: String(product.quantity),
-      specialInstructions: product.specialInstructions || ''
+      specialInstructions: product.specialInstructions || "",
     });
     setShowProductDialog(true);
   };
 
   const handleRemoveProduct = (productId: string) => {
-    setProducts(products.filter(p => p.productId !== productId));
+    setProducts(products.filter((p) => p.productId !== productId));
   };
 
   const formatDate = (date: Date) => {
-    return format(date, 'PPP', { locale: fr });
+    return format(date, "PPP", { locale: fr });
   };
 
   return (
@@ -202,17 +229,17 @@ const CreateEventScreen = () => {
       <Text variant="bodyMedium" style={styles.label}>Type d'événement</Text>
       <SegmentedButtons
         value={type}
-        onValueChange={value => setType(value as EventType)}
+        onValueChange={(value) => setType(value as EventType)}
         buttons={[
-          { value: 'wedding', label: 'Mariage' },
-          { value: 'birthday', label: 'Anniversaire' },
-          { value: 'ceremony', label: 'Cérémonie' },
-          { value: 'other', label: 'Autre' },
+          { value: "wedding", label: "Mariage" },
+          { value: "birthday", label: "Anniversaire" },
+          { value: "ceremony", label: "Cérémonie" },
+          { value: "other", label: "Autre" },
         ]}
         style={styles.segmentedButtons}
       />
 
-      {Platform.OS === 'ios' ? (
+      {Platform.OS === "ios" ? (
         <DateTimePicker
           value={date}
           mode="date"
@@ -320,25 +347,27 @@ const CreateEventScreen = () => {
           </Button>
         </View>
 
-        {products.map((product, index) => (
-          <List.Item
-            key={`${product.productId}-${index}`}
-            title={`Produit ${product.productId}`}
-            description={`Quantité: ${product.quantity}${product.specialInstructions ? `\n${product.specialInstructions}` : ''}`}
-            right={props => (
-              <View style={styles.productActions}>
-                <IconButton
-                  icon="pencil"
-                  onPress={() => handleEditProduct(product)}
-                />
-                <IconButton
-                  icon="delete"
-                  onPress={() => handleRemoveProduct(product.productId)}
-                />
-              </View>
-            )}
-          />
-        ))}
+        {products.map((product, index) => {
+          const productData = availableProducts.find((p) => p.id === product.productId);
+          return (
+            <List.Item
+              key={`${product.productId}-${index}`}
+              title={productData ? productData.name : `Produit ${product.productId}`}
+              description={`Quantité: ${product.quantity}${
+                product.specialInstructions ? `\n${product.specialInstructions}` : ""
+              }`}
+              right={(props) => (
+                <View style={styles.productActions}>
+                  <IconButton icon="pencil" onPress={() => handleEditProduct(product)} />
+                  <IconButton
+                    icon="delete"
+                    onPress={() => handleRemoveProduct(product.productId)}
+                  />
+                </View>
+              )}
+            />
+          );
+        })}
         {!!errors.products && (
           <HelperText type="error" visible={!!errors.products}>
             {errors.products}
@@ -357,20 +386,32 @@ const CreateEventScreen = () => {
       <Portal>
         <Dialog visible={showProductDialog} onDismiss={() => setShowProductDialog(false)}>
           <Dialog.Title>
-            {selectedProduct ? 'Modifier le produit' : 'Ajouter un produit'}
+            {selectedProduct ? "Modifier le produit" : "Ajouter un produit"}
           </Dialog.Title>
           <Dialog.Content>
-            <TextInput
-              label="ID du produit"
-              value={currentProduct.productId}
-              onChangeText={value => setCurrentProduct({ ...currentProduct, productId: value })}
-              mode="outlined"
-              style={styles.dialogInput}
-            />
+            <View style={styles.dialogInput}>
+              <Picker
+                selectedValue={currentProduct.productId}
+                onValueChange={(value) =>
+                  setCurrentProduct({ ...currentProduct, productId: value })
+                }
+              >
+                <Picker.Item label="Sélectionner un produit" value="" />
+                {availableProducts.map((product) => (
+                  <Picker.Item
+                    key={product.id}
+                    label={`${product.name} (${product.price} XOF)`}
+                    value={product.id}
+                  />
+                ))}
+              </Picker>
+            </View>
             <TextInput
               label="Quantité"
               value={currentProduct.quantity}
-              onChangeText={value => setCurrentProduct({ ...currentProduct, quantity: value })}
+              onChangeText={(value) =>
+                setCurrentProduct({ ...currentProduct, quantity: value })
+              }
               keyboardType="numeric"
               mode="outlined"
               style={styles.dialogInput}
@@ -378,7 +419,9 @@ const CreateEventScreen = () => {
             <TextInput
               label="Instructions spéciales"
               value={currentProduct.specialInstructions}
-              onChangeText={value => setCurrentProduct({ ...currentProduct, specialInstructions: value })}
+              onChangeText={(value) =>
+                setCurrentProduct({ ...currentProduct, specialInstructions: value })
+              }
               mode="outlined"
               multiline
               style={styles.dialogInput}
@@ -387,7 +430,7 @@ const CreateEventScreen = () => {
           <Dialog.Actions>
             <Button onPress={() => setShowProductDialog(false)}>Annuler</Button>
             <Button onPress={handleAddProduct}>
-              {selectedProduct ? 'Modifier' : 'Ajouter'}
+              {selectedProduct ? "Modifier" : "Ajouter"}
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -400,7 +443,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     marginBottom: 24,
@@ -419,13 +462,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   productHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   productActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   dialogInput: {
     marginBottom: 16,

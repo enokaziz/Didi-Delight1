@@ -1,27 +1,22 @@
 import React from 'react';
 import { Platform } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import EventsScreen from '../screens/events/EventsScreen';
 import CreateEventScreen from '../screens/events/CreateEventScreen';
 import EventDetailsScreen from '../screens/events/EventDetailsScreen';
 import { IconButton, useTheme } from 'react-native-paper';
-
-export type EventsStackParamList = {
-  EventsList: undefined;
-  CreateEvent: undefined;
-  EventDetails: { eventId: string };
-  EditEvent: { eventId: string };
-  Chat: { eventId: string };
-};
-
-type DrawerNavigationProps = DrawerNavigationProp<Record<string, object>>;
+import { EventsStackParamList } from '../navigation/types';
 
 const Stack = createStackNavigator<EventsStackParamList>();
 
+
+// Typage pour la navigation dans un StackNavigator
+type NavigationProps = StackNavigationProp<EventsStackParamList>;
+
 const EventsNavigator = () => {
-  const navigation = useNavigation<DrawerNavigationProps>();
+  const navigation = useNavigation<NavigationProps>(); // Typage correct pour StackNavigator
   const theme = useTheme();
 
   const defaultScreenOptions = {
@@ -53,9 +48,9 @@ const EventsNavigator = () => {
         ...defaultScreenOptions,
         headerLeft: () => (
           <IconButton
-            icon="menu"
+            icon="arrow-left"
             size={24}
-            onPress={() => navigation.openDrawer()}
+            onPress={() => navigation.goBack()}
             iconColor={theme.colors.primary}
           />
         ),

@@ -1,5 +1,7 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
+import * as LocalAuthentication from 'expo-local-authentication';
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export const register = async (email: string, password: string) => {
   try {
@@ -35,4 +37,38 @@ export const logout = async () => {
   } catch (error: any) {
     throw new Error("Erreur lors de la déconnexion: " + error.message);
   }
+};
+
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return true;
+  } catch (error: any) {
+    throw new Error("Erreur lors de la réinitialisation du mot de passe: " + error.message);
+  }
+}
+ 
+export const biometricLogin = async () => {
+  // Commenter pour désactiver temporairement
+  /*
+  try {
+    const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+    if (!isBiometricAvailable) {
+      throw new Error("L'authentification biométrique n'est pas disponible sur cet appareil.");
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authentifiez-vous pour accéder à votre compte',
+    });
+
+    if (!result.success) {
+      throw new Error("Échec de l'authentification biométrique.");
+    }
+
+    return true;
+  } catch (error: any) {
+    throw new Error("Erreur lors de la connexion biométrique: " + error.message);
+  }
+  */
+  return false; // Retourne false par défaut pour désactiver
 };

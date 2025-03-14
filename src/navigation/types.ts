@@ -1,5 +1,8 @@
 import { Product } from "../types/Product";
 import { PaymentMethod } from "../types/PaymentMethod";
+import EventManagementScreen from 'screens/admin/EventManagementScreen';
+import InventoryManagementScreen from 'screens/admin/InventoryManagementScreen';
+import LoyaltyPointsManagementScreen from 'screens/admin/LoyaltyPointsManagementScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -17,12 +20,14 @@ export type RootStackParamList = {
   ChangePasswordScreen: undefined;
   AddressesScreen: undefined;
   OrderHistory: undefined;
+  ProductManagement: undefined;
   PaymentMethods: undefined;
   AddPaymentMethod: undefined;
   EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
   OrderDetails: { orderId: string };
   ClientTabs: undefined;
+  ChangerPasswordScreen: undefined;
 };
 
 export type AdminStackParamList = {
@@ -33,6 +38,10 @@ export type AdminStackParamList = {
   AddEditProduct: { product?: Product };
   Auth: undefined;
   AuthScreen: undefined;
+  EventManagement: undefined;
+  PromotionManagement: undefined;
+  InventoryManagement: undefined;
+  LoyaltyPointsManagement: undefined;
 };
 
 export type ClientStackParamList = {
@@ -71,4 +80,6 @@ export type EventsStackParamList = {
   EventsList: undefined;
   EventDetails: { eventId: string };
   CreateEvent: undefined;
+  EditEvent: { eventId: string };
+  Events : undefined;
 };

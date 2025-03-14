@@ -41,6 +41,10 @@ const CheckoutForm = ({ formState, onFormChange }: Props) => {
         />
       </TouchableOpacity>
 
+      {formState.errors.includes('address') && (
+        <Text style={styles.errorText}>Veuillez entrer une adresse valide.</Text>
+      )}
+
       <Text style={styles.sectionTitle}>Paiement</Text>
       <TouchableOpacity
         style={styles.inputWrapper}
@@ -56,6 +60,10 @@ const CheckoutForm = ({ formState, onFormChange }: Props) => {
           accessibilityHint="Entrez votre méthode de paiement préférée"
         />
       </TouchableOpacity>
+
+      {formState.errors.includes('paymentMethod') && (
+        <Text style={styles.errorText}>Veuillez entrer une méthode de paiement valide.</Text>
+      )}
     </View>
   );
 };
@@ -70,6 +78,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dee2e6',
     padding: 5, // Padding pour agrandir la zone cliquable
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
 

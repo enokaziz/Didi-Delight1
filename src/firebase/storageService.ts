@@ -1,9 +1,8 @@
 // src/firebase/storageService.ts
-// src/firebase/storageService.ts
 import { storage } from "./firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from "firebase/storage";
 
-export const uploadImage = async (uri: string, setUploadProgress?: (progress: number) => void): Promise<string> => {
+export const uploadImage = async (uri: string, p0: string, setUploadProgress?: (progress: number) => void): Promise<string> => {
     try {
         const response = await fetch(uri);
         const blob = await response.blob();

@@ -3,6 +3,7 @@ import { User, onAuthStateChanged, updatePassword as firebaseUpdatePassword } fr
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { Alert } from "react-native";
+import { biometricLogin } from "../services/authService"; // Ajout de l'importation
 
 type UserRole = "admin" | "client" | "livreur" | "invité";
 
@@ -11,7 +12,8 @@ interface AuthContextType {
   userRole: UserRole;
   loading: boolean;
   logout: () => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  loginWithBiometric: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +52,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  const loginWithBiometric = async () => {
+    try {
+      const success = await biometricLogin();
+      if (success) {
+        // Si la connexion est réussie, vous pouvez mettre à jour l'état de l'utilisateur ici
+        setUser(user); // Assurez-vous de récupérer l'utilisateur approprié
+      }
+    } catch (error: any) { // Spécification du type d'erreur
+      console.error("Erreur lors de la connexion biométrique :", error);
+      Alert.alert("Erreur", error.message);
+    }
+  };
+  
   const logout = async () => {
     try {
       await auth.signOut();
@@ -63,7 +78,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       Alert.alert("Erreur", "Déconnexion échouée.");
     }
   };
-  const updatePassword = async (newPassword: string) => {
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
     try {
       if (user) {
         await firebaseUpdatePassword(user, newPassword);
@@ -79,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   const contextValue = useMemo(
-    () => ({ user, userRole, loading, logout, updatePassword }),
+    () => ({ user, userRole, loading, logout, updatePassword, loginWithBiometric }),
     [user, userRole, loading]
   );
 

@@ -1,5 +1,6 @@
 import { db } from '../../firebase/firebaseConfig';
 import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
+import { Linking, Alert } from 'react-native';
 
 export type MobileMoneyTransaction = {
   userId: string;
@@ -10,6 +11,24 @@ export type MobileMoneyTransaction = {
   status: 'pending' | 'completed' | 'failed';
   createdAt: Date;
   updatedAt: Date;
+};
+export const payWithMobileMoney = (provider: string, amount: number, phoneNumber: string) => {
+  let ussdCode = '';
+
+  switch (provider) {
+    case 'Orange Money':
+      ussdCode = `#144*2*${amount}*${phoneNumber}#`;
+      break;
+    case 'Moov Money':
+      ussdCode = `*155*1*${amount}*${phoneNumber}#`;
+      break;
+    default:
+      Alert.alert('Service non disponible');
+      return;
+  }
+
+  const encodedUssd = encodeURIComponent(ussdCode);
+  Linking.openURL(`tel:${encodedUssd}`);
 };
 
 export const mobileMoneyService = {
@@ -33,6 +52,7 @@ export const mobileMoneyService = {
         updatedAt: new Date(),
       };
 
+      
       const docRef = await addDoc(collection(db, 'mobileMoneyTransactions'), transaction);
       
       // Ici, vous devriez intégrer l'API de l'opérateur (Orange ou Moov)

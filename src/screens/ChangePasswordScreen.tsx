@@ -67,7 +67,7 @@ const ChangePasswordScreen = () => {
     try {
       // Simuler l'appel à l'API pour changer le mot de passe
       // Dans une application réelle, vous utiliseriez updatePassword de Firebase
-      // await updatePassword(currentPassword, newPassword);
+      await updatePassword(currentPassword, newPassword);
       
       // Simulation d'un délai d'API
       await new Promise(resolve => setTimeout(resolve, 1500));

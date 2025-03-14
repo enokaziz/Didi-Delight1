@@ -16,7 +16,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ messages, onSendMessage, 
   const handleSend = useCallback(() => {
     if (input.trim()) {
       onSendMessage(input);
-      setInput("");
+      setInput('');
     }
   }, [input, onSendMessage]);
 
@@ -26,7 +26,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ messages, onSendMessage, 
         data={messages}
         keyExtractor={(item) => item.id || item.timestamp.toString()}
         renderItem={({ item }) => (
-          <MessageRenderer message={item} isCurrentUser={item.senderId === currentUserId} />
+          <View>
+            <MessageRenderer message={item} isCurrentUser={item.senderId === currentUserId} />
+            <Text style={styles.timestamp}>{item.timestamp}</Text>
+          </View>
         )}
         contentContainerStyle={styles.messagesContainer}
       />
@@ -52,6 +55,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, borderWidth: 1, borderColor: "#ccc", borderRadius: 8, paddingHorizontal: 10, marginRight: 10 },
   sendButton: { backgroundColor: "#007AFF", padding: 10, borderRadius: 8, justifyContent: "center" },
   sendButtonText: { color: "#fff", fontWeight: "bold" },
+  timestamp: { fontSize: 12, color: "#666", marginBottom: 10 },
 });
 
 export default ChatComponent;

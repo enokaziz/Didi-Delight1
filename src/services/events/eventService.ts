@@ -16,8 +16,12 @@ class EventService {
       const docRef = await addDoc(collection(db, this.eventsCollection), eventWithDates);
       return docRef.id;
     } catch (error) {
-      console.error('Erreur lors de la création de l\'événement:', error);
-      throw new Error('Impossible de créer l\'événement');
+      console.error(
+        error instanceof Error && error.message.includes("permission")
+        ? "Vous n'avez pas la permission de créer un événement."
+        : "Erreur lors de la création de l'événement. Veuillez réessayer."
+    );
+      throw error;
     }
   }
 

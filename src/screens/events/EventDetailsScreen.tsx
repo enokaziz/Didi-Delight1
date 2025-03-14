@@ -55,23 +55,22 @@ const EventDetailsScreen = () => {
 
   const loadEventDetails = async () => {
     if (!eventId) return;
-
     try {
-      const eventRef = doc(db, 'events', eventId);
+      const eventRef = doc(db, "events", eventId);
       const eventDoc = await getDoc(eventRef);
-      
       if (eventDoc.exists()) {
+        const data = eventDoc.data();
         setEvent({
           id: eventDoc.id,
-          ...eventDoc.data(),
-          date: eventDoc.data().date.toDate(),
-          createdAt: eventDoc.data().createdAt.toDate(),
-          updatedAt: eventDoc.data().updatedAt.toDate(),
+          ...data,
+          date: data.date.toDate(),
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
         } as Event);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des détails:', error);
-      Alert.alert('Erreur', 'Impossible de charger les détails de l\'événement');
+      console.error("Erreur lors du chargement des détails:", error);
+      Alert.alert("Erreur", "Impossible de charger les détails de l'événement");
     } finally {
       setLoading(false);
     }
@@ -93,6 +92,10 @@ const EventDetailsScreen = () => {
 
   const handlePayDeposit = async () => {
     if (!event || !user) return;
+    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+      Alert.alert("Erreur", "Veuillez entrer un numéro de téléphone valide (10 chiffres).");
+      return;
+    }
 
     try {
       const deposit = eventService.calculateEventDeposit(event.totalAmount);

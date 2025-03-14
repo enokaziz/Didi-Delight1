@@ -21,7 +21,7 @@ import { eventService } from '../../services/events/eventService';
 import { useAuth } from '../../contexts/AuthContext';
 import CalendarStrip from 'react-native-calendar-strip';
 import moment from 'moment';
-import { EventsStackParamList } from '../../navigation/EventsNavigator';
+import { EventsStackParamList } from '../../navigation/types';
 
 type NavigationProp = StackNavigationProp<EventsStackParamList>;
 
@@ -128,7 +128,7 @@ const EventsScreen = () => {
               <Text variant="bodySmall" style={styles.date}>
                 {format(item.date, 'PPP', { locale: fr })}
               </Text>
-            </View>
+            </View>F
             <Chip
               style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}
               textStyle={styles.statusText}
@@ -206,18 +206,17 @@ const EventsScreen = () => {
           fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
         }}
       />
-
-      <View style={styles.filterContainer}>
-        <Button
-          mode="outlined"
-          onPress={() => setFilterVisible(true)}
-          icon="filter-variant"
-          style={styles.filterButton}
-        >
-          {selectedFilter === 'all' ? 'Tous' :
-           selectedFilter === 'upcoming' ? 'À venir' : 'Passés'}
-        </Button>
-      </View>
+<View style={styles.filterContainer}>
+  <Button
+    mode="outlined"
+    onPress={() => setFilterVisible(true)}
+    icon="filter-variant"
+    style={styles.filterButton}
+  >
+    {selectedFilter === 'all' ? 'Tous' :
+     selectedFilter === 'upcoming' ? 'À venir' : 'Passés'}
+  </Button>
+</View>
 
       {loading ? (
         <ActivityIndicator style={styles.loader} />
@@ -231,12 +230,12 @@ const EventsScreen = () => {
             <View style={styles.emptyContainer}>
               <Text variant="bodyLarge" style={styles.emptyText}>Aucun événement trouvé</Text>
               <Button
-                mode="contained"
-                onPress={() => navigation.navigate('CreateEvent' as const)}
-                style={styles.createButton}
-              >
-                Créer un événement
-              </Button>
+  mode="contained"
+  onPress={() => navigation.navigate('CreateEvent' as const)}
+  style={styles.createButton}
+>
+  Créer un événement
+</Button>
             </View>
           )}
         />

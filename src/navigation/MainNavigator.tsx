@@ -27,7 +27,7 @@ const MainNavigator = () => {
     );
   }
 
-  const routeName: keyof RootStackParamList = 'ClientTabs';
+  
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -38,7 +38,7 @@ const MainNavigator = () => {
       ) : (
         <Stack.Screen name="ClientApp" component={ClientNavigator} />
       )}
-      <Stack.Screen name="ClientTabs" component={ClientTabs} />
+      
     </Stack.Navigator>
   );
 };

@@ -8,6 +8,7 @@ import OrderHistory from "../screens/OrderHistory";
 import PaymentMethods from "../screens/PaymentMethods";
 import HelpCenter from "../screens/HelpCenter";
 import AddressesScreen from "../screens/AddressesScreen";
+import ResetPasswordScreen from "../screens/ResetPasswordScreen";
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,7 @@ export const SettingsStackNavigator: React.FC = () => {
       <Stack.Screen name="PaymentMethods" component={PaymentMethods} />
       <Stack.Screen name="HelpCenter" component={HelpCenter} />
       <Stack.Screen name="AddressesScreen" component={AddressesScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 };

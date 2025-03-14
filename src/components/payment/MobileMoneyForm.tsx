@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Button } from 'react-native';
 import { TextInput, SegmentedButtons, Text } from 'react-native-paper';
+import { payWithMobileMoney } from '../../services/payment/mobileMoneyService';
 
 interface MobileMoneyFormProps {
   phoneNumber: string;
@@ -17,17 +18,35 @@ const MobileMoneyForm: React.FC<MobileMoneyFormProps> = ({
   setProvider,
   error,
 }) => {
+  const [errorState, setError] = useState(error);
+
   const validatePhoneNumber = (number: string) => {
-    // Accepter uniquement les chiffres
     const digitsOnly = number.replace(/\D/g, '');
-    // Limiter à 8 chiffres
-    return digitsOnly.slice(0, 8);
+    return digitsOnly.length === 8;
   };
 
   const handlePhoneNumberChange = (value: string) => {
-    const formattedNumber = validatePhoneNumber(value);
+    const formattedNumber = value.replace(/\D/g, '');
+    if (formattedNumber.length > 8) {
+      return;
+    }
     setPhoneNumber(formattedNumber);
   };
+
+  const handlePayment = () => {
+    const amount = 1000; // montant à payer, à ajuster selon votre logique
+    payWithMobileMoney(provider === 'orange' ? 'Orange Money' : 'Moov Money', amount, phoneNumber);
+  };
+
+  if (!validatePhoneNumber(phoneNumber)) {
+    setError('Le numéro de téléphone doit contenir 8 chiffres.');
+    return (
+      <View style={styles.container}>
+        <Text variant="bodySmall" style={styles.title}>Paiement Mobile Money</Text>
+        <Text variant="bodySmall" style={styles.errorText}>{errorState}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -39,10 +58,10 @@ const MobileMoneyForm: React.FC<MobileMoneyFormProps> = ({
         onChangeText={handlePhoneNumberChange}
         keyboardType="phone-pad"
         maxLength={8}
-        error={!!error}
+        error={!!errorState}
         style={styles.input}
       />
-      {error && <Text variant="bodySmall" style={styles.errorText}>{error}</Text>}
+      {errorState && <Text variant="bodySmall" style={styles.errorText}>{errorState}</Text>}
 
       <SegmentedButtons
         value={provider}
@@ -56,6 +75,8 @@ const MobileMoneyForm: React.FC<MobileMoneyFormProps> = ({
       <Text variant="bodySmall" style={styles.infoText}>
         Vous recevrez une notification sur votre téléphone pour confirmer le paiement.
       </Text>
+
+      <Button title="Payer avec Mobile Money" onPress={handlePayment} />
     </View>
   );
 };

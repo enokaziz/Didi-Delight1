@@ -46,6 +46,7 @@ const PromotionManagementScreen: React.FC = () => {
       Alert.alert('Erreur', 'Échec de la création de la promotion');
     }
   };
+  
 
   const togglePromotionActive = async (promotion: Promotion) => {
     try {

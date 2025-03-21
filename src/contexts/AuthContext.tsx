@@ -1,3 +1,4 @@
+//src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { User, onAuthStateChanged, updatePassword as firebaseUpdatePassword } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";

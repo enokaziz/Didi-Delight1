@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, FlatList } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { sendMessage, subscribeToChat, deleteMessage, ChatMessage } from "../../firebase/chatService";
 import ChatCore from "../../components/chat/ChatCore";
-import { AdminStackParamList } from "navigation/types";
+import { AdminStackParamList } from "../../navigation/types";
 import MessageRenderer from "../../components/chat/MessageRenderer";
 
 type AdminChatScreenRouteProp = RouteProp<AdminStackParamList, "AdminChat">;

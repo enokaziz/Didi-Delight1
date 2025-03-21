@@ -1,13 +1,20 @@
 import { useState } from 'react';
 
 const useLoyalty = () => {
-    const [points, setPoints] = useState(0); // État pour les points de fidélité
+    const [points, setPoints] = useState(0);
 
-    const addPoints = (newPoints: number) => { // Fonction pour ajouter des points
+    const addPoints = (newPoints: number) => {
+        if (newPoints < 0) {
+            throw new Error('Le nombre de points doit être positif');
+        }
         setPoints(points + newPoints);
     };
 
-    return { points, addPoints };
+    const resetPoints = () => {
+        setPoints(0);
+    };
+
+    return { points, addPoints, resetPoints };
 };
 
 export default useLoyalty;

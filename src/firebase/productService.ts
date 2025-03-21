@@ -1,5 +1,6 @@
 import { collection, addDoc, updateDoc, deleteDoc, getDocs, doc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './firebaseConfig';
 import { Product } from '../types/Product';
 
 export const getProducts = async (): Promise<Product[]> => {
@@ -9,13 +10,16 @@ export const getProducts = async (): Promise<Product[]> => {
       const data = doc.data();
       return {
         id: doc.id,
-        name: data.name || '', // Valeur par défaut si `name` est undefined
-        description: data.description || '', // Valeur par défaut si `description` est undefined
-        price: data.price || 0, // Valeur par défaut si `price` est undefined
-        image: data.image || '', // Valeur par défaut si `image` est undefined
-        category: data.category || '', // Valeur par défaut si `category` est undefined
-        isPopular: data.isPopular || false, // Valeur par défaut pour `isPopular`
-        isPromotional: data.isPromotional || false, // Valeur par défaut pour `isPromotional`
+        name: data.name || '',
+        description: data.description || '',
+        price: data.price || 0,
+        imageUrl: data.imageUrl || '',
+        category: data.category || '',
+        stock: data.stock || 0,
+        rating: data.rating || 0,
+        reviews: data.reviews || 0,
+        isPopular: data.isPopular || false,
+        isPromotional: data.isPromotional || false,
       } as Product;
     });
   } catch (error) {
@@ -24,8 +28,23 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 };
 
+export const uploadImage = async (uri: string): Promise<string> => {
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const filename = uri.substring(uri.lastIndexOf('/') + 1);
+    const storageRef = ref(storage, `products/${filename}`);
+    
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  } catch (error) {
+    console.error('Erreur lors de l\'upload de l\'image :', error);
+    throw new Error('Échec de l\'upload de l\'image. Veuillez réessayer.');
+  }
+};
+
 export const createProduct = async (product: Omit<Product, 'id'>): Promise<void> => {
-  // Validation des champs obligatoires
   if (!product.name || product.name.trim() === "") {
     throw new Error('Le nom du produit ne peut pas être vide.');
   }
@@ -33,13 +52,15 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<void>
     throw new Error('Le prix doit être supérieur à 0.');
   }
 
-  // Ajoutez des valeurs par défaut pour les champs optionnels
   const productData = {
     ...product,
-    description: product.description || '', // Valeur par défaut si `description` est undefined
-    image: product.image || '', // Valeur par défaut si `image` est undefined
-    isPopular: product.isPopular || false, // Valeur par défaut pour `isPopular`
-    isPromotional: product.isPromotional || false, // Valeur par défaut pour `isPromotional`
+    description: product.description || '',
+    imageUrl: product.imageUrl || '',
+    stock: product.stock || 0,
+    rating: product.rating || 0,
+    reviews: product.reviews || 0,
+    isPopular: product.isPopular || false,
+    isPromotional: product.isPromotional || false,
   };
 
   try {
@@ -51,7 +72,6 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<void>
 };
 
 export const updateProduct = async (product: Product): Promise<void> => {
-  // Validation des champs obligatoires
   if (!product.name || product.name.trim() === "") {
     throw new Error('Le nom du produit ne peut pas être vide.');
   }
@@ -59,19 +79,21 @@ export const updateProduct = async (product: Product): Promise<void> => {
     throw new Error('Le prix doit être supérieur à 0.');
   }
 
-  // Ajoutez des valeurs par défaut pour les champs optionnels
   const productData = {
     name: product.name,
-    description: product.description || '', // Valeur par défaut si `description` est undefined
+    description: product.description || '',
     price: product.price,
-    image: product.image || '', // Valeur par défaut si `image` est undefined
+    imageUrl: product.imageUrl || '',
     category: product.category,
-    isPopular: product.isPopular || false, // Valeur par défaut pour `isPopular`
-    isPromotional: product.isPromotional || false, // Valeur par défaut pour `isPromotional`
+    stock: product.stock || 0,
+    rating: product.rating || 0,
+    reviews: product.reviews || 0,
+    isPopular: product.isPopular || false,
+    isPromotional: product.isPromotional || false,
   };
 
   try {
-    const productRef = doc(db, 'products', product.id!);
+    const productRef = doc(db, 'products', product.id);
     await updateDoc(productRef, productData);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du produit :', error);
@@ -93,4 +115,4 @@ export const deleteProduct = async (productId: string): Promise<void> => {
   }
 };
 
-export { Product };
+export type { Product };

@@ -1,8 +1,8 @@
 import { Product } from "../types/Product";
 import { PaymentMethod } from "../types/PaymentMethod";
-import EventManagementScreen from 'screens/admin/EventManagementScreen';
-import InventoryManagementScreen from 'screens/admin/InventoryManagementScreen';
-import LoyaltyPointsManagementScreen from 'screens/admin/LoyaltyPointsManagementScreen';
+import { NavigationProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -28,7 +28,11 @@ export type RootStackParamList = {
   OrderDetails: { orderId: string };
   ClientTabs: undefined;
   ChangerPasswordScreen: undefined;
+  Accueil: undefined;
+  ProductDetails: { product: Product };
 };
+
+export type NavigationProps = NavigationProp<RootStackParamList>;
 
 export type AdminStackParamList = {
   AdminDashboard: undefined;
@@ -62,6 +66,7 @@ export type ClientStackParamList = {
   EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
   OrderDetails: { orderId: string };
+  ProductDetails: { product: Product };
 };
 
 export type PaymentStackParamList = {
@@ -83,3 +88,7 @@ export type EventsStackParamList = {
   EditEvent: { eventId: string };
   Events : undefined;
 };
+
+export type CartScreenNavigationProp = NativeStackNavigationProp<ClientStackParamList, 'Panier'>;
+export type CheckoutScreenNavigationProp = NativeStackNavigationProp<ClientStackParamList, 'Checkout'>;
+export type ProductDetailsScreenRouteProp = RouteProp<ClientStackParamList, 'ProductDetails'>;

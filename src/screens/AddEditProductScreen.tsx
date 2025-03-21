@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker'; // Importer la fonction
+import { launchImageLibrary } from 'react-native-image-picker';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Product } from '../types/Product';
-import { createProduct, updateProduct } from '../firebase/productService';
+import { createProduct, updateProduct, uploadImage } from '../firebase/productService';
 import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../navigation/types';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,7 +33,7 @@ const AddEditProductScreen: React.FC = () => {
   const [name, setName] = useState(product?.name || '');
   const [price, setPrice] = useState(product?.price ? String(product.price) : '');
   const [category, setCategory] = useState(product?.category || '');
-  const [image, setImage] = useState(product?.image || '');
+  const [imageUrl, setImageUrl] = useState(product?.imageUrl || '');
   const [description, setDescription] = useState(product?.description || '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,7 +42,7 @@ const AddEditProductScreen: React.FC = () => {
     launchImageLibrary(
       {
         mediaType: 'photo',
-        quality: 0.8, // Qualité de l'image
+        quality: 0.8,
       },
       (response) => {
         if (response.didCancel) {
@@ -62,11 +62,11 @@ const AddEditProductScreen: React.FC = () => {
             Toast.show({
               type: 'error',
               text1: 'Erreur',
-              text2: 'Échec du téléchargement de l’image.',
+              text2: 'Échec du téléchargement de l\'image.',
             });
             return;
           }
-          setImage(response.assets[0].uri || '');
+          setImageUrl(response.assets[0].uri || '');
         }
       }
     );
@@ -108,15 +108,24 @@ const AddEditProductScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
+      let finalImageUrl = imageUrl;
+      
+      // Si une nouvelle image a été sélectionnée (URI local), l'uploader vers Firestore Storage
+      if (imageUrl && imageUrl.startsWith('file://')) {
+        finalImageUrl = await uploadImage(imageUrl);
+      }
+
       const productData = {
         name,
         price: parseFloat(price.replace(',', '.')),
         category,
-        image,
+        imageUrl: finalImageUrl,
         description,
-        quantity: product?.quantity || 0, // Ajoutez une quantité par défaut si nécessaire
-        isPromotional: product?.isPromotional || false, // Valeur par défaut pour `isPromotional`
-        isPopular: product?.isPopular || false, // Valeur par défaut pour `isPopular`
+        stock: product?.stock || 0,
+        rating: product?.rating || 0,
+        reviews: product?.reviews || 0,
+        isPromotional: product?.isPromotional || false,
+        isPopular: product?.isPopular || false,
       };
 
       if (product) {
@@ -135,7 +144,7 @@ const AddEditProductScreen: React.FC = () => {
 
       navigation.goBack();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du produit :", error);
+      console.error('Erreur lors de la sauvegarde du produit :', error);
       Toast.show({
         type: 'error',
         text1: 'Erreur',
@@ -184,9 +193,11 @@ const AddEditProductScreen: React.FC = () => {
       />
 
       <TouchableOpacity style={styles.imageButton} onPress={handleSelectImage}>
-        <Text style={styles.imageButtonText}>Sélectionner une image</Text>
+        <Text style={styles.imageButtonText}>
+          {imageUrl ? "Changer l'image" : "Sélectionner une image"}
+        </Text>
       </TouchableOpacity>
-      {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+      {imageUrl && <Image source={{ uri: imageUrl }} style={styles.imagePreview} />}
 
       {isLoading ? (
         <ActivityIndicator size="large" color={COLORS.primary} />

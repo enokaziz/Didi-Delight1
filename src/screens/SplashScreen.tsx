@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LinearGradient from 'react-native-linear-gradient';
 
 interface SplashScreenProps {
   onAnimationComplete: () => void; // Callback appelé quand l'animation est terminée
@@ -30,30 +31,31 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onAnimationComplete }) => {
   }, [fadeAnim, scaleAnim, onAnimationComplete]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={['#4c669f', '#3b5998', '#192f6a']}
+      style={styles.container}
+    >
       <Animated.View
         style={[
           styles.content,
           { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        {/* Remplacez par votre logo ou texte */}
         <Image
           source={{ uri: "https://via.placeholder.com/150" }} // Remplacez par votre logo
           style={styles.logo}
         />
         <Text style={styles.title}>Bienvenue dans l’App</Text>
       </Animated.View>
-    </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#007AFF", // Couleur de fond de l’écran de démarrage
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     alignItems: "center",

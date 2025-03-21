@@ -2,10 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Alert, Easing } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { register, login } from "../services/authService";
 import * as Haptics from "expo-haptics";
-import SkeletonPlaceholder from "react-native-skeleton-placeholder";
-import ConfettiCannon from "react-native-confetti-cannon";
+import { ActivityIndicator } from 'react-native-paper';
+import { register, login } from "../services/authService";
 import EmailInput from "../components/EmailInput";
 import PasswordInput from "../components/PasswordInput";
 import AuthButton from "../components/AuthButton";
@@ -18,15 +17,13 @@ const AuthScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [shakeAnim] = useState(new Animated.Value(0));
   const [floatAnim] = useState(new Animated.Value(0));
-  const [inputAnim] = useState(new Animated.Value(0)); // Animation pour les champs
-  const [toggleAnim] = useState(new Animated.Value(0)); // Animation pour le toggle
+  const [inputAnim] = useState(new Animated.Value(0));
+  const [toggleAnim] = useState(new Animated.Value(0));
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-
   const strengthColors = {
     0: "#ff4444",
     1: "#ff4444",
@@ -49,7 +46,6 @@ const AuthScreen: React.FC = () => {
     setEmailError("");
     setPasswordError("");
     setIsLoading(true);
-
     if (!validateEmail(email)) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setEmailError("Email invalide");
@@ -57,7 +53,6 @@ const AuthScreen: React.FC = () => {
       setIsLoading(false);
       return;
     }
-
     if (password.length < 6) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setPasswordError("Minimum 6 caractères");
@@ -65,15 +60,12 @@ const AuthScreen: React.FC = () => {
       setIsLoading(false);
       return;
     }
-
     try {
       if (isLogin) {
         await login(email, password);
-        setShowConfetti(true);
         Alert.alert("Bienvenue !");
       } else {
         await register(email, password);
-        setShowConfetti(true);
         Alert.alert("Compte créé avec succès !");
       }
     } catch (error: any) {
@@ -86,7 +78,6 @@ const AuthScreen: React.FC = () => {
       Alert.alert("Erreur", errorMessage);
     } finally {
       setIsLoading(false);
-      setTimeout(() => setShowConfetti(false), 3000);
     }
   }, [email, password, isLogin]);
 
@@ -97,7 +88,7 @@ const AuthScreen: React.FC = () => {
       friction: 5,
       useNativeDriver: true,
     }).start();
-    shakeAnim.setValue(10); // Déclenche un rebond
+    shakeAnim.setValue(10);
   }, [shakeAnim]);
 
   useEffect(() => {
@@ -127,17 +118,11 @@ const AuthScreen: React.FC = () => {
 
   return (
     <Animated.View style={[styles.container, animatedStyles]}>
-      {showConfetti && <ConfettiCannon count={200} origin={{ x: -10, y: 0 }} fadeOut autoStart />}
       {isLoading ? (
-        <SkeletonPlaceholder backgroundColor="#e0e0e0" highlightColor="#f5f5f5">
-          <View style={styles.skeletonContainer}>
-            <View style={styles.skeletonTitle} />
-            <View style={styles.skeletonInput} />
-            <View style={styles.skeletonInput} />
-            <View style={styles.skeletonButton} />
-            <View style={styles.skeletonSocial} />
-          </View>
-        </SkeletonPlaceholder>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4f46e5" />
+          <Text style={styles.loadingText}>Chargement...</Text>
+        </View>
       ) : (
         <View>
           <Text style={styles.title}>Didi Delight</Text>
@@ -205,7 +190,6 @@ const AuthScreen: React.FC = () => {
   );
 };
 
-// Styles restent inchangés
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa", paddingHorizontal: 30, justifyContent: "center" },
   skeletonContainer: { flex: 1, justifyContent: "center" },
@@ -227,6 +211,17 @@ const styles = StyleSheet.create({
   toggleHighlight: { color: "#4f46e5", fontWeight: "600" },
   forgotPassword: { alignSelf: "flex-end", marginBottom: 15 },
   forgotPasswordText: { color: "#4f46e5", fontSize: 14 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#6c757d',
+    fontSize: 16,
+  },
 });
 
 export default AuthScreen;

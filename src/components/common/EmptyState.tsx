@@ -25,7 +25,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     switch (type) {
       case "search":
         return {
-          image: require("../../assets/images/empty-search.png"), // Créez ou importez cette image
+         // image: require("@assets/ima"), // Créez ou importez cette image
           title: title || "Aucun résultat",
           message: message || `Aucun produit ne correspond à "${searchQuery}"`,
           icon: "search-outline",
@@ -33,7 +33,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         };
       case "error":
         return {
-          image: require("../../assets/images/error.png"), // Créez ou importez cette image
+         // image: require("../../assets/images/empty-search.png"), // Créez ou importez cette image
           title: title || "Oups !",
           message: message || "Une erreur s'est produite. Veuillez réessayer.",
           icon: "refresh-outline",
@@ -41,7 +41,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         };
       default:
         return {
-          image: require("../../assets/images/empty-cart.png"), // Créez ou importez cette image
+        //  image: require("../../assets/images/empty-cart.png"), // Créez ou importez cette image
           title: title || "Catalogue vide",
           message: message || "Aucun produit n'est disponible pour le moment",
           icon: "add-circle-outline",
@@ -54,7 +54,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={styles.container}>
-      <Image source={content.image} style={styles.image} resizeMode="contain" />
+     {/* <Image source={content.image} style={styles.image} resizeMode="contain" />*/}
       <Text style={styles.title}>{content.title}</Text>
       <Text style={styles.message}>{content.message}</Text>
       

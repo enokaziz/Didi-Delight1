@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 50,
+    height: 30,
     backgroundColor: COLORS.background.paper,
     borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.md,

@@ -8,7 +8,7 @@ import { StackNavigationProp } from "@react-navigation/stack"; // Import depuis 
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-import { ClientStackParamList } from "navigation/types"; // Assurez-vous que ce chemin est correct
+import { ClientStackParamList } from "../navigation/types"; // Assurez-vous que ce chemin est correct
 
 // Types pour les FAQ
 type FAQCategory = "commandes" | "paiements" | "livraison" | "produits" | "compte" | "autre";
@@ -157,8 +157,15 @@ const HelpCenter = () => {
   }, []);
 
   const openChat = useCallback(() => {
-    navigation.navigate("Chat");
-  }, [navigation]);
+    try {
+        navigation.navigate('Chat', {
+            orderId: undefined
+        });
+    } catch (error) {
+        console.error('Erreur de navigation:', error);
+        // Gérer l'erreur si nécessaire
+    }
+}, [navigation]);
 
   const renderCategoryChips = useCallback(() => {
     const categories: FAQCategory[] = ["commandes", "paiements", "livraison", "produits", "compte", "autre"];
@@ -210,7 +217,7 @@ const HelpCenter = () => {
               <Button
                 mode="contained"
                 icon="phone"
-                onPress={() => Linking.openURL("tel:+22500000000")}
+                onPress={() => Linking.openURL("tel:+226 07 50 51 31")}
                 style={[styles.supportButton, { backgroundColor: "#FF9800" }]}
               >
                 Appel

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { createOrder } from '../services/orderService';
-import { Product } from 'types/Product';
+import { Product } from '../types/Product';
 
 export const useOrderProcessing = (clearCart: () => void) => {
   const [loading, setLoading] = useState(false);

@@ -2,38 +2,38 @@
 export const COLORS = {
   // Couleur principale avec nuances
   primary: {
-    light: "#FF7A80",
-    main: "#FF4952",
-    dark: "#D83038",
+    light: '#FF6B6B',
+    main: '#FF4757',
+    dark: '#FF2E42',
   },
   // Couleurs secondaires
   secondary: {
-    light: "#F8F9FA",
-    main: "#E9ECEF",
-    dark: "#DEE2E6",
+    light: '#F1F2F6',
+    main: '#DFE4EA',
+    dark: '#CED6E0',
   },
   // Couleurs de texte
   text: {
-    primary: "#212529",
-    secondary: "#495057",
-    light: "#6C757D",
-    disabled: "#ADB5BD",
+    primary: '#2F3542',
+    secondary: '#747D8C',
+    light: '#A4B0BE',
+    disabled: '#DFE4EA',
   },
   // Couleurs de fond
   background: {
-    default: "#F8F9FA",
-    paper: "#FFFFFF",
-    card: "#FFFFFF",
+    default: '#FFFFFF',
+    paper: '#F8F9FA',
+    card: '#FFFFFF',
   },
   // Couleurs d'état
   state: {
-    success: "#38B000",
-    warning: "#FFC107",
-    error: "#DC3545",
-    info: "#17A2B8",
+    success: '#2ED573',
+    error: '#FF4757',
+    warning: '#FFA502',
+    info: '#1E90FF',
   },
   // Couleurs de bordure
-  border: "#DEE2E6",
+  border: '#DFE4EA',
 };
 
 
@@ -43,6 +43,7 @@ export const SPACING = {
   md: 16,
   lg: 24,
   xl: 32,
+  xxl: 48,
 };
 
 // Définir les types corrects pour fontWeight
@@ -53,29 +54,34 @@ export type FontWeight =
 
 export const TYPOGRAPHY = {
   title: {
-    fontSize: 26,
-    fontWeight: "700" as FontWeight,
+    fontSize: 24,
+    fontWeight: '700' as FontWeight,
     color: COLORS.text.primary,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: "600" as FontWeight,
+    fontSize: 18,
+    fontWeight: '600' as FontWeight,
     color: COLORS.text.primary,
   },
   body: {
     fontSize: 16,
-    fontWeight: "400" as FontWeight,
+    fontWeight: '400' as FontWeight,
     color: COLORS.text.primary,
   },
   caption: {
     fontSize: 14,
-    fontWeight: "400" as FontWeight,
+    fontWeight: '400' as FontWeight,
     color: COLORS.text.secondary,
   },
   small: {
     fontSize: 12,
-    fontWeight: "400" as FontWeight,
-    color: COLORS.text.light,
+    fontWeight: '400' as FontWeight,
+    color: COLORS.text.secondary,
+  },
+  button: {
+    fontSize: 16,
+    fontWeight: '600' as FontWeight,
+    color: COLORS.text.primary,
   },
 };
 

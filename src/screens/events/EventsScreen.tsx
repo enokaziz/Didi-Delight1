@@ -16,11 +16,10 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import DateTimePicker from '@react-native-community/datetimepicker'; // Nouveau composant
 import { Event } from '../../types/event';
 import { eventService } from '../../services/events/eventService';
 import { useAuth } from '../../contexts/AuthContext';
-import CalendarStrip from 'react-native-calendar-strip';
-import moment from 'moment';
 import { EventsStackParamList } from '../../navigation/types';
 
 type NavigationProp = StackNavigationProp<EventsStackParamList>;
@@ -30,6 +29,7 @@ const EventsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false); // État pour afficher DateTimePicker
   const [filterVisible, setFilterVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const { user } = useAuth();
@@ -42,7 +42,7 @@ const EventsScreen = () => {
 
   const loadEvents = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       let fetchedEvents: Event[];
@@ -56,8 +56,9 @@ const EventsScreen = () => {
           fetchedEvents = await eventService.getUpcomingEvents(user.uid);
           break;
         case 'past':
-          fetchedEvents = (await eventService.getUserEvents(user.uid))
-            .filter(event => event.date < new Date());
+          fetchedEvents = (await eventService.getUserEvents(user.uid)).filter(
+            (event) => event.date < new Date()
+          );
           break;
         default:
           fetchedEvents = await eventService.getEventsByDateRange(
@@ -68,9 +69,10 @@ const EventsScreen = () => {
       }
 
       if (searchQuery) {
-        fetchedEvents = fetchedEvents.filter(event =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase())
+        fetchedEvents = fetchedEvents.filter(
+          (event) =>
+            event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            event.description.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
@@ -124,11 +126,13 @@ const EventsScreen = () => {
         <Card.Content>
           <View style={styles.cardHeader}>
             <View>
-              <Text variant="titleMedium" style={styles.title}>{item.title}</Text>
+              <Text variant="titleMedium" style={styles.title}>
+                {item.title}
+              </Text>
               <Text variant="bodySmall" style={styles.date}>
                 {format(item.date, 'PPP', { locale: fr })}
               </Text>
-            </View>F
+            </View>
             <Chip
               style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}
               textStyle={styles.statusText}
@@ -136,7 +140,7 @@ const EventsScreen = () => {
               {getStatusLabel(item.status)}
             </Chip>
           </View>
-          
+
           <View style={styles.eventInfo}>
             <Text variant="bodyMedium" numberOfLines={2} style={styles.description}>
               {item.description}
@@ -158,6 +162,12 @@ const EventsScreen = () => {
     </TouchableOpacity>
   );
 
+  const onDateChange = (event: any, selected?: Date) => {
+    const currentDate = selected || selectedDate;
+    setShowDatePicker(Platform.OS === 'ios'); // Sur iOS, il faut fermer manuellement
+    setSelectedDate(currentDate);
+  };
+
   return (
     <View style={styles.container}>
       <Searchbar
@@ -167,56 +177,40 @@ const EventsScreen = () => {
         style={styles.searchBar}
       />
 
-      <CalendarStrip
-        style={styles.calendar}
-        calendarColor={theme.colors.surface}
-        dateNumberStyle={{ 
-          color: theme.colors.onSurface,
-          fontSize: 14,
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        }}
-        dateNameStyle={{ 
-          color: theme.colors.onSurface,
-          fontSize: 12,
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        }}
-        highlightDateNumberStyle={{ 
-          color: theme.colors.primary,
-          fontSize: 14,
-          fontWeight: 'bold',
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        }}
-        highlightDateNameStyle={{ 
-          color: theme.colors.primary,
-          fontSize: 12,
-          fontWeight: 'bold',
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        }}
-        daySelectionAnimation={{
-          type: 'background',
-          duration: 200,
-          highlightColor: theme.colors.primaryContainer,
-        }}
-        onDateSelected={(date: moment.Moment) => setSelectedDate(date.toDate())}
-        selectedDate={selectedDate}
-        locale={{ name: 'fr', config: { locale: fr } }}
-        calendarHeaderStyle={{
-          color: theme.colors.onSurface,
-          fontSize: 14,
-          fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-        }}
-      />
-<View style={styles.filterContainer}>
-  <Button
-    mode="outlined"
-    onPress={() => setFilterVisible(true)}
-    icon="filter-variant"
-    style={styles.filterButton}
-  >
-    {selectedFilter === 'all' ? 'Tous' :
-     selectedFilter === 'upcoming' ? 'À venir' : 'Passés'}
-  </Button>
-</View>
+      {/* Bouton pour ouvrir DateTimePicker */}
+      <View style={styles.datePickerContainer}>
+        <Button
+          mode="outlined"
+          onPress={() => setShowDatePicker(true)}
+          style={styles.dateButton}
+        >
+          {format(selectedDate, 'PPP', { locale: fr })}
+        </Button>
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+            onChange={onDateChange}
+            locale="fr-FR"
+          />
+        )}
+      </View>
+
+      <View style={styles.filterContainer}>
+        <Button
+          mode="outlined"
+          onPress={() => setFilterVisible(true)}
+          icon="filter-variant"
+          style={styles.filterButton}
+        >
+          {selectedFilter === 'all'
+            ? 'Tous'
+            : selectedFilter === 'upcoming'
+            ? 'À venir'
+            : 'Passés'}
+        </Button>
+      </View>
 
       {loading ? (
         <ActivityIndicator style={styles.loader} />
@@ -228,14 +222,16 @@ const EventsScreen = () => {
           contentContainerStyle={styles.flatListContent}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
-              <Text variant="bodyLarge" style={styles.emptyText}>Aucun événement trouvé</Text>
+              <Text variant="bodyLarge" style={styles.emptyText}>
+                Aucun événement trouvé
+              </Text>
               <Button
-  mode="contained"
-  onPress={() => navigation.navigate('CreateEvent' as const)}
-  style={styles.createButton}
->
-  Créer un événement
-</Button>
+                mode="contained"
+                onPress={() => navigation.navigate('CreateEvent' as const)}
+                style={styles.createButton}
+              >
+                Créer un événement
+              </Button>
             </View>
           )}
         />
@@ -295,11 +291,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
   },
-  calendar: {
-    height: 100,
+  datePickerContainer: {
     marginBottom: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
+  },
+  dateButton: {
+    alignSelf: 'flex-start',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -395,7 +391,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   flatListContent: {
-    paddingBottom: 80, // Pour éviter que le FAB ne chevauche
+    paddingBottom: 80,
   },
   createButton: {
     marginTop: 16,

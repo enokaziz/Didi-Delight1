@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, Animated } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import LinearGradient from "react-native-linear-gradient";
 import { AuthButtonProps } from "../types/AuthButtonProps";
 
 const AuthButton: React.FC<AuthButtonProps> = ({ onPress, isLoading, isLogin }) => {
@@ -26,7 +26,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onPress, isLoading, isLogin }) 
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <LinearGradient
-          colors={["#6366f1" as const, "#4f46e5" as const]}
+          colors={["#4c669f", "#3b5998", "#192f6a"]}
           style={styles.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -56,8 +56,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   gradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
     paddingVertical: 18,
-    alignItems: "center",
   },
   buttonPressed: {
     opacity: 0.9,

@@ -22,7 +22,7 @@ import { fr } from "date-fns/locale";
 import { Event, EventType, EventProduct } from "../../types/event";
 import { eventService } from "../../services/events/eventService";
 import { useAuth } from "../../contexts/AuthContext";
-import { EventsStackParamList } from "../../navigation/EventsNavigator";
+import { EventsStackParamList } from "../../navigation/types";
 import { getProducts, Product } from "../../firebase/productService"; // Importer depuis votre fichier
 
 type NavigationProps = StackNavigationProp<EventsStackParamList>;

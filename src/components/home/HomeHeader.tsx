@@ -3,12 +3,14 @@ import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY } from "../../theme/theme";
+import SortPicker from '../../components/home/SortPicker';
 
 interface HomeHeaderProps {
   title: string;
   productsCount: number;
   onResetFilters?: () => void;
   showReset?: boolean;
+  SortPicker?: React.ReactNode;
 }
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({ 
@@ -16,6 +18,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   productsCount, 
   onResetFilters,
   showReset = false
+  
 }) => {
   const translateY = new Animated.Value(-50);
   const opacity = new Animated.Value(0);

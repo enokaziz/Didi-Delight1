@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>747650559227-ru6f08qq6je234moo3socbh6h0t5rs1p.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.747650559227-ru6f08qq6je234moo3socbh6h0t5rs1p</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBvVpp-CmG2c9X4wLQWx9S4rLvZxYqPJfQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>747650559227</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.dididelight.app</string>
+	<key>PROJECT_ID</key>
+	<string>didi-delight</string>
+	<key>STORAGE_BUCKET</key>
+	<string>didi-delight.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:747650559227:ios:fc9dd9fe3f706cb739d45e</string>
+</dict>
+</plist>

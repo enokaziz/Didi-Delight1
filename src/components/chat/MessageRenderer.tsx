@@ -1,9 +1,17 @@
 import React, { useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Pressable, Linking } from "react-native";
-import FastImage from "react-native-fast-image";
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Pressable, 
+  Linking,
+  Image // Ajout de Image
+} from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { ChatMessage } from "../../firebase/chatService";
 import { commonStyles } from "../../styles/commonStyles";
+
 
 interface MessageRendererProps {
   message: ChatMessage;
@@ -29,30 +37,23 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({ message, isCurrentUse
     <View style={[commonStyles.messageContainer, isCurrentUser ? commonStyles.clientMessage : commonStyles.adminMessage]}>
       {isImage ? (
         <Pressable onPress={() => {}}>
-          <FastImage source={{ uri: message.message }} style={styles.messageImage} resizeMode={FastImage.resizeMode.cover} />
+          <Image 
+            source={{ uri: message.message }} 
+            style={styles.messageImage} 
+            resizeMode="cover"
+            defaultSource={require('../../assets/images/empty-search.png')}
+          />
           {onDownload && (
-            <TouchableOpacity style={styles.downloadButton} onPress={() => onDownload(message.message)} disabled={isDownloading}>
-              <Ionicons name={isDownloading ? "hourglass-outline" : "download-outline"} size={18} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </Pressable>
-      ) : isPdf ? (
-        <Pressable style={styles.fileContainer} onPress={handleOpenLink}>
-          <MaterialIcons name="picture-as-pdf" size={24} color="#E44D26" />
-          <Text style={styles.fileName}>{fileName}</Text>
-          {onDownload && (
-            <TouchableOpacity style={styles.downloadButton} onPress={() => onDownload(message.message)} disabled={isDownloading}>
-              <Ionicons name={isDownloading ? "hourglass-outline" : "download-outline"} size={18} color="#007AFF" />
-            </TouchableOpacity>
-          )}
-        </Pressable>
-      ) : isOtherFile ? (
-        <Pressable style={styles.fileContainer} onPress={handleOpenLink}>
-          <MaterialIcons name="insert-drive-file" size={24} color="#4285F4" />
-          <Text style={styles.fileName}>{fileName}</Text>
-          {onDownload && (
-            <TouchableOpacity style={styles.downloadButton} onPress={() => onDownload(message.message)} disabled={isDownloading}>
-              <Ionicons name={isDownloading ? "hourglass-outline" : "download-outline"} size={18} color="#007AFF" />
+            <TouchableOpacity 
+              style={styles.downloadButton} 
+              onPress={() => onDownload(message.message)} 
+              disabled={isDownloading}
+            >
+              <Ionicons 
+                name={isDownloading ? "hourglass-outline" : "download-outline"} 
+                size={18} 
+                color="#fff" 
+              />
             </TouchableOpacity>
           )}
         </Pressable>
@@ -74,7 +75,13 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({ message, isCurrentUse
 };
 
 const styles = StyleSheet.create({
-  messageImage: { width: 200, height: 150, borderRadius: 12, marginBottom: 4 },
+  messageImage: { 
+    width: 200, 
+    height: 150, 
+    borderRadius: 12,
+     marginBottom: 4,
+     backgroundColor: "#f0f0f0"
+    },
   downloadButton: { position: "absolute", top: 8, right: 8, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 16, padding: 8 },
   fileContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#f0f0f0", borderRadius: 8, padding: 8, marginBottom: 4 },
   fileName: { flex: 1, marginLeft: 8, fontSize: 14 },

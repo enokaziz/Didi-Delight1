@@ -4,7 +4,7 @@
     "slug": "Didi-delight",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash-icon.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -12,13 +12,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#ffffff",
+      "iosDisplayInForeground": true
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dididelight.app"
+      "bundleIdentifier": "com.dididelight.app",
+      "icon": "./assets/ios-icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/splash-icon.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundImage": "./assets/adaptive-background.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -35,7 +42,11 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "@react-native-firebase/messaging",
+      "expo-location",
+      "expo-image-picker",
+      "expo-file-system",
+      "expo-media-library",
+      
       [
         "expo-build-properties",
         {
@@ -48,7 +59,8 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-asset"
     ]
   }
 }

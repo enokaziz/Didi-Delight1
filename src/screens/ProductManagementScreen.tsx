@@ -1,108 +1,96 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator, Animated } from 'react-native';
-import { Product } from '../types/Product';
-import { launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
-import { Button, IconButton, Card, Title, Paragraph } from 'react-native-paper';
-import { Picker } from '@react-native-picker/picker';
-import Toast from 'react-native-toast-message';
-import FastImage from 'react-native-fast-image';
-import ProductList from '../components/ProductList';
-import useProductManagement from '../hooks/useProductManagement';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types'; // Importez les types de navigation
-import styles from './ProductManagementScreen.styles';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Toast from 'react-native-toast-message';
+
+import type { Product } from '../types/Product';
+import type { ProductManagementProps } from '../types/productManagement';
+import { RootStackParamList } from '@navigation/types';
+import ProductList from '@components/ProductList';
+import { ProductSearchFilters } from '@components/ProductSearchFilters';
+import useProductManagement from '@hooks/useProductManagement';
+import { usePagination } from '@hooks/usePagination';
+import { styles as productManagementStyles } from '@styles/screens/productManagement/styles';
+
+const PRODUCTS_PER_PAGE = 10;
 
 const ProductManagementScreen: React.FC = () => {
   const { products, loading, fetchProducts, handleDeleteProduct } = useProductManagement();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ProductManagement'>>(); // Annoter navigation
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ProductManagement'>>();
 
-  const [page, setPage] = useState(1);
-  const productsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
 
-  const animatedValues = useRef<Animated.Value[]>([]);
-
   useEffect(() => {
-    const uniqueCategories = [...new Set(products.map(product => product.category))];
-    setCategories(uniqueCategories);
-    animatedValues.current = products.map(() => new Animated.Value(0));
+    const uniqueCategories = [...new Set(products.map((product: Product) => product.category))];
+    setCategories(uniqueCategories as string[]);
   }, [products]);
 
   const handleAddProduct = () => {
-    navigation.navigate('AddEditProduct', { product: undefined }); // Naviguer vers l'écran d'ajout
+    navigation.navigate('AddEditProduct', { product: undefined });
   };
 
   const handleEditProduct = (product: Product) => {
-    navigation.navigate('AddEditProduct', { product }); // Passer le produit à modifier
+    navigation.navigate('AddEditProduct', { product });
   };
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
     if (searchQuery) {
-      filtered = filtered.filter(product =>
+      filtered = filtered.filter((product: Product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     if (categoryFilter) {
-      filtered = filtered.filter(product =>
+      filtered = filtered.filter((product: Product) =>
         product.category?.toLowerCase() === categoryFilter.toLowerCase()
       );
     }
     return filtered;
   }, [products, searchQuery, categoryFilter]);
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const paginatedProducts = useMemo(() => {
-    const start = (page - 1) * productsPerPage;
-    return filteredProducts.slice(start, start + productsPerPage);
-  }, [filteredProducts, page]);
+  const { paginatedItems, currentPage, totalPages, goToPage } = usePagination({
+    items: filteredProducts,
+    itemsPerPage: PRODUCTS_PER_PAGE,
+  });
+
+  const handleDelete = async (productId: string) => {
+    await handleDeleteProduct(productId, fetchProducts);
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Gestion des Produits</Text>
+    <View style={productManagementStyles.container}>
+      <Text style={productManagementStyles.title}>Gestion des Produits</Text>
 
-      <View style={styles.searchFilterContainer}>
-        <TextInput
-          placeholder="Rechercher un produit"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchFilterInput}
-          accessibilityLabel="Rechercher un produit"
-        />
-        <Picker
-          selectedValue={categoryFilter}
-          onValueChange={setCategoryFilter}
-          style={styles.filterPicker}
-          accessibilityLabel="Filtrer par catégorie"
-        >
-          <Picker.Item label="Toutes les catégories" value="" />
-          {categories.map(category => (
-            <Picker.Item key={category} label={category} value={category} />
-          ))}
-        </Picker>
-      </View>
+      <ProductSearchFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        categories={categories}
+      />
 
       <Button
         mode="contained"
         onPress={handleAddProduct}
-        style={styles.addButton}
+        style={productManagementStyles.addButton}
         accessibilityLabel="Ajouter un produit"
       >
         Ajouter un produit
       </Button>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6347" />
+        <View style={productManagementStyles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF4952" />
         </View>
       ) : (
         <ProductList
-          products={paginatedProducts}
+          products={paginatedItems}
           onEdit={handleEditProduct}
-          onDelete={(productId) => handleDeleteProduct(productId, fetchProducts)}
+          onDelete={handleDelete}
         />
       )}
 

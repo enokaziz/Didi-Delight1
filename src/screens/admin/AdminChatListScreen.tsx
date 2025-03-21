@@ -4,7 +4,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import { getAllChats, Chat } from "../../firebase/chatService";
 import { format } from "date-fns";
-import { AdminStackParamList } from "navigation/types";
+import { AdminStackParamList } from "../../navigation/types";
 
 type AdminChatListScreenNavigationProp = StackNavigationProp<AdminStackParamList, "AdminChats">;
 

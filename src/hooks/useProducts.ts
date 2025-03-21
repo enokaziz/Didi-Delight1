@@ -35,7 +35,7 @@ export const useProducts = () => {
       typeof data?.name === "string" &&
       typeof data?.price === "number" &&
       typeof data?.category === "string" &&
-      typeof data?.image === "string" &&
+      typeof data?.imageUrl === "string" &&
       typeof data?.description === "string"
     );
   };

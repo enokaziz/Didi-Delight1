@@ -16,9 +16,9 @@ import {
 import { useNavigation } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { Ionicons } from "@expo/vector-icons"
-import { logout } from "services/authService"
-import useAdminData from "hooks/useAdminData"
-import type { AdminStackParamList } from "navigation/types"
+import { logout } from "../../services/authService"
+import useAdminData from "../../hooks/useAdminData"
+import type { AdminStackParamList } from "../../navigation/types"
 
 // Type explicite pour le statut des commandes
 type OrderStatus = "En attente" | "En cours" | "Livrée" | "Annulée"

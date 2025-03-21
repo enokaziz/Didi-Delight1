@@ -329,4 +329,8 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - 🔧 Configuration initiale
 
 ---
+<<<<<<< HEAD
 Fait avec ❤️ par l'équipe Didi Delight
+=======
+Fait avec ❤️ par l'équipe Didi Delight
+>>>>>>> 26e94b31f8b8d2a42444880ece11c727a74cdd16

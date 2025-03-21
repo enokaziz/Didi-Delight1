@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import FastImage from "react-native-fast-image";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { ChatMessage } from "../../firebase/chatService";
 
 interface MessageBubbleProps {
@@ -22,10 +21,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isCurrentUser })
       ]}
     >
       {message.message.startsWith("https://") ? (
-        <FastImage
+        <Image
           source={{ uri: message.message }}
           style={styles.messageImage}
-          resizeMode={FastImage.resizeMode.contain}
+          resizeMode="contain"
+          defaultSource={require('../../assets/placeholder.png')}
         />
       ) : (
         <Text style={styles.messageText}>{message.message}</Text>
@@ -34,7 +34,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isCurrentUser })
     </View>
   );
 };
-
 // Styles
 const styles = StyleSheet.create({
   messageContainer: {

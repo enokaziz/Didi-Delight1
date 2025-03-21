@@ -13,13 +13,19 @@ import {
   Modal,
   Dimensions,
   Linking,
+  Image,
 } from "react-native";
-import { useAuth } from "../contexts/AuthContext";
-import { sendMessage, subscribeToChat, deleteMessage, fetchPreviousMessages, ChatMessage } from "../firebase/chatService";
+import { useAuth } from "@contexts/AuthContext";
+import {
+  sendMessage,
+  subscribeToChat,
+  deleteMessage,
+  fetchPreviousMessages,
+  type ChatMessage,
+} from "@firebase/chatService";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "../firebase/firebaseConfig";
+import { storage, auth } from "@firebase/firebaseConfig";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FastImage from "react-native-fast-image";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
@@ -27,12 +33,9 @@ import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as Notifications from "expo-notifications";
-import AttachmentMenu from "../components/chat/AttachmentMenu";
-import FilePreview from "../components/chat/FilePreview";
-import MessageRenderer from "../components/chat/MessageRenderer";
-import { commonStyles } from "../styles/commonStyles";
+import { AttachmentMenu, FilePreview, MessageRenderer } from "@components/chat";
+import { commonStyles } from "@styles/commonStyles";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
 
 // Configurations
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -75,7 +78,8 @@ const ChatScreen: React.FC = () => {
   // Gestion de la connexion utilisateur
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) setError("Utilisateur déconnecté. Veuillez vous reconnecter.");
+      if (!currentUser)
+        setError("Utilisateur déconnecté. Veuillez vous reconnecter.");
     });
     return () => unsubscribeAuth();
   }, []);
@@ -99,7 +103,10 @@ const ChatScreen: React.FC = () => {
         setLoading(false);
         if (newMessages[newMessages.length - 1]?.senderId !== user.uid) {
           Notifications.scheduleNotificationAsync({
-            content: { title: "Nouveau message", body: newMessages[newMessages.length - 1].message },
+            content: {
+              title: "Nouveau message",
+              body: newMessages[newMessages.length - 1].message,
+            },
             trigger: null,
           });
         }
@@ -139,8 +146,12 @@ const ChatScreen: React.FC = () => {
 
   // Validation des fichiers
   const validateFile = useCallback((file: FilePreviewData) => {
-    if (file.size > MAX_FILE_SIZE) throw new Error(`Fichier trop volumineux (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`);
-    if (![...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOC_TYPES].includes(file.type)) throw new Error("Type de fichier non supporté");
+    if (file.size > MAX_FILE_SIZE)
+      throw new Error(
+        `Fichier trop volumineux (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`
+      );
+    if (![...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOC_TYPES].includes(file.type))
+      throw new Error("Type de fichier non supporté");
     return true;
   }, []);
 
@@ -154,7 +165,10 @@ const ChatScreen: React.FC = () => {
         validateFile(filePreview);
         const response = await fetch(filePreview.uri);
         const blob = await response.blob();
-        const fileRef = ref(storage, `chat/${chatId}/${Date.now()}_${filePreview.name}`);
+        const fileRef = ref(
+          storage,
+          `chat/${chatId}/${Date.now()}_${filePreview.name}`
+        );
         await uploadBytes(fileRef, blob, { contentType: filePreview.type });
         const url = await getDownloadURL(fileRef);
         await sendMessage(chatId, user.uid, "admin", url, filePreview.type);
@@ -198,7 +212,9 @@ const ChatScreen: React.FC = () => {
 
   // Sélection de document
   const handleDocumentPicker = useCallback(async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: ALLOWED_DOC_TYPES });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ALLOWED_DOC_TYPES,
+    });
     if (!result.canceled && result.assets?.length) {
       const asset = result.assets[0];
       setFilePreview({
@@ -233,53 +249,61 @@ const ChatScreen: React.FC = () => {
   }, []);
 
   // Suppression de message
-  const handleDeleteMessage = useCallback(async (messageId: string) => {
-    try {
-      await deleteMessage(chatId, messageId);
-      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
-    } catch (error) {
-      Alert.alert("Erreur", "Impossible de supprimer le message.");
-    }
-  }, [chatId]);
+  const handleDeleteMessage = useCallback(
+    async (messageId: string) => {
+      try {
+        await deleteMessage(chatId, messageId);
+        setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      } catch (error) {
+        Alert.alert("Erreur", "Impossible de supprimer le message.");
+      }
+    },
+    [chatId]
+  );
 
   // Rendu de l'en-tête
-  const renderHeader = useCallback(() => (
-    <View style={styles.header}>
-      <TouchableOpacity style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
-      <View style={styles.headerInfo}>
-        <Text style={styles.headerTitle}>{adminName}</Text>
-        <Text style={styles.headerSubtitle}>Service client</Text>
+  const renderHeader = useCallback(
+    () => (
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerTitle}>{adminName}</Text>
+          <Text style={styles.headerSubtitle}>Service client</Text>
+        </View>
       </View>
-    </View>
-  ), [adminName]);
+    ),
+    [adminName]
+  );
 
   // États de chargement ou erreur
-  if (loading) return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      {renderHeader()}
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Chargement des messages...</Text>
-      </View>
-    </SafeAreaView>
-  );
+  if (loading)
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        {renderHeader()}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Chargement des messages...</Text>
+        </View>
+      </SafeAreaView>
+    );
 
-  if (error) return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      {renderHeader()}
-      <View style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={48} color="#FF3B30" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-          <Text style={styles.retryButtonText}>Réessayer</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
+  if (error)
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        {renderHeader()}
+        <View style={styles.errorContainer}>
+          <MaterialIcons name="error-outline" size={48} color="#FF3B30" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -304,15 +328,24 @@ const ChatScreen: React.FC = () => {
             />
           )}
           contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => !lastVisible && flatListRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() =>
+            !lastVisible &&
+            flatListRef.current?.scrollToEnd({ animated: false })
+          }
           onEndReached={loadMoreMessages}
           onEndReachedThreshold={0.1}
-          ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color="#007AFF" /> : null}
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : null
+          }
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Aucun message. Commencez la conversation !</Text>
+              <Text style={styles.emptyText}>
+                Aucun message. Commencez la conversation !
+              </Text>
             </View>
           }
         />
@@ -344,7 +377,10 @@ const ChatScreen: React.FC = () => {
           />
           <TouchableOpacity
             onPress={handleSend}
-            style={[styles.sendButton, !input.trim() && !filePreview && styles.sendButtonDisabled]}
+            style={[
+              styles.sendButton,
+              !input.trim() && !filePreview && styles.sendButtonDisabled,
+            ]}
             disabled={(!input.trim() && !filePreview) || isUploading}
           >
             {isUploading ? (
@@ -355,13 +391,20 @@ const ChatScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-      <Modal visible={imageViewerVisible} transparent onRequestClose={() => setImageViewerVisible(false)}>
+      <Modal
+        visible={imageViewerVisible}
+        transparent
+        onRequestClose={() => setImageViewerVisible(false)}
+      >
         <View style={styles.imageViewerContainer}>
-          <TouchableOpacity style={styles.imageViewerClose} onPress={() => setImageViewerVisible(false)}>
+          <TouchableOpacity
+            style={styles.imageViewerClose}
+            onPress={() => setImageViewerVisible(false)}
+          >
             <Ionicons name="close" size={28} color="#fff" />
           </TouchableOpacity>
-          <FastImage
-            source={{ uri: selectedImage || "", cache: FastImage.cacheControl.web }}
+          <Image
+            source={{ uri: selectedImage || "" }}
             style={styles.imageViewerImage}
             resizeMode="contain"
             onError={() => setImageViewerVisible(false)}
@@ -429,8 +472,18 @@ const styles = StyleSheet.create({
   sendButtonDisabled: { backgroundColor: "#B8B8B8" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#666" },
-  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  errorText: { marginTop: 10, fontSize: 16, color: "#FF3B30", textAlign: "center" },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#FF3B30",
+    textAlign: "center",
+  },
   retryButton: {
     marginTop: 20,
     paddingHorizontal: 20,
@@ -439,7 +492,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: { color: "#fff", fontWeight: "bold" },
-  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   emptyText: { fontSize: 16, color: "#666", textAlign: "center" },
   imageViewerContainer: {
     flex: 1,
@@ -449,7 +507,12 @@ const styles = StyleSheet.create({
   },
   imageViewerImage: { width: SCREEN_WIDTH, height: SCREEN_WIDTH },
   imageViewerClose: { position: "absolute", top: 40, right: 20, zIndex: 10 },
-  imageViewerDownload: { position: "absolute", bottom: 40, right: 20, zIndex: 10 },
+  imageViewerDownload: {
+    position: "absolute",
+    bottom: 40,
+    right: 20,
+    zIndex: 10,
+  },
 });
 
 export default ChatScreen;

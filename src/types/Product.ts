@@ -1,12 +1,16 @@
 // src/types/Product.ts
 export interface Product {
-  quantity: number;
   id: string;
   name: string;
   description: string;
   price: number;
-  image: string;
+  imageUrl: string;
   category: string;
-  isPopular?: boolean; // Indique si le produit est populaire
-  isPromotional?: boolean; // Indique si le produit est en promotion
+  stock: number;
+  rating: number;
+  reviews: number;
+  quantity?: number;
+  isPromotional?: boolean;
+  isPopular?: boolean;
+  image?: string;
 }

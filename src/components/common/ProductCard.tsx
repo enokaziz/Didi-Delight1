@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Product } from '../../types/Product';
+import React from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from "../../theme/theme";
+import { Product } from "../../types/Product";
 
 interface ProductCardProps {
   product: Product;
@@ -11,60 +12,89 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   return (
     <View style={styles.card}>
-      {product.isPopular && <Text style={styles.badge}>Populaire</Text>}
-      {product.isPromotional && <Text style={styles.badge}>Promotion</Text>}
-      <Image source={{ uri: product.image }} style={styles.image} />
-      <Text style={styles.name}>{product.name}</Text>
-      <Text style={styles.price}>{product.price} FCFA</Text>
-      <TouchableOpacity
-        onPress={() => onAddToCart(product)}
-        style={styles.button}
-        accessibilityLabel={`Ajouter ${product.name} au panier`}
-      >
-        <Text style={styles.buttonText}>Ajouter au panier</Text>
-      </TouchableOpacity>
+      {product.isPopular && <Text style={styles.badgePopular}>Populaire</Text>}
+      {product.isPromotional && <Text style={styles.badgePromo}>Promo</Text>}
+      <Image source={{ uri: product.imageUrl }} style={styles.image} />
+      <View style={styles.content}>
+        <Text style={styles.name}>{product.name}</Text>
+        <Text style={styles.price}>{product.price} FCFA</Text>
+        <TouchableOpacity
+          onPress={() => onAddToCart(product)}
+          style={styles.button}
+          accessibilityLabel={`Ajouter ${product.name} au panier`}
+        >
+          <Text style={styles.buttonText}>Ajouter</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    margin: 10,
-    alignItems: 'center',
+    backgroundColor: COLORS.background.card,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.sm,
+    margin: SPACING.sm,
+    alignItems: "center",
+    ...SHADOWS.small,
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 10,
+    width: 120,
+    height: 120,
+    borderRadius: BORDER_RADIUS.sm,
+    marginBottom: SPACING.sm,
+  },
+  content: {
+    alignItems: "center",
   },
   name: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.body,
+    fontWeight: "600",
+    color: COLORS.text.primary,
+    textAlign: "center",
   },
   price: {
-    fontSize: 14,
-    color: 'gray',
-    marginBottom: 5,
+    ...TYPOGRAPHY.caption,
+    color: COLORS.text.secondary,
+    marginBottom: SPACING.sm,
   },
   button: {
-    backgroundColor: '#FF6347',
-    padding: 8,
-    borderRadius: 5,
+    backgroundColor: COLORS.primary.main,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.sm,
   },
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.body,
+    color: "#FFF",
+    fontWeight: "600",
   },
-  badge: {
-    backgroundColor: '#FFD700',
-    padding: 5,
-    borderRadius: 5,
-    marginBottom: 5,
-    fontWeight: 'bold',
+  badgePopular: {
+    position: "absolute",
+    top: SPACING.xs,
+    left: SPACING.xs,
+    backgroundColor: COLORS.secondary.main,
+    color: "#FFF",
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.sm,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  badgePromo: {
+    position: "absolute",
+    top: SPACING.xs,
+    left: SPACING.xs,
+    backgroundColor: COLORS.primary.main,
+    color: "#FFF",
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.sm,
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 

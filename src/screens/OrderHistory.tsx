@@ -16,7 +16,7 @@ type OrderItem = {
   name: string
   price: number
   quantity: number
-  image: string
+  imageUrl: string
 }
 
 type Order = {
@@ -165,7 +165,7 @@ const OrderHistory = () => {
           {item.items.slice(0, 2).map((orderItem, index) => (
             <View key={index} style={styles.orderItem}>
               <Image
-                source={{ uri: orderItem.image }}
+                source={{ uri: orderItem.imageUrl }}
                 style={styles.itemImage}
                 defaultSource={require("../assets/icons/splash-icon.png")}
               />

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:747650559227:android:a257c4cfc4e3774839d45e",
+        "mobilesdk_app_id": "1:747650559227:android:a2fac2b20392a9cd39d45e",
         "android_client_info": {
-          "package_name": "com.dididelight"
+          "package_name": "com.dididelight.app"
         }
       },
       "oauth_client": [

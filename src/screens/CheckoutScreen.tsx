@@ -1,220 +1,107 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { useCheckoutAnimations } from '../hooks/useCheckoutAnimations';
-import { useOrderProcessing } from '../hooks/useOrderProcessing';
-import { validateCheckoutForm } from '../utils/validation';
-import AnimatedCartItem from '../components/checkout/AnimatedCartItem';
-import CheckoutForm from '../components/checkout/CheckoutForm';
-import LoadingOverlay from '../components/checkout/LoadingOverlay';
-import styles from '../styles/checkoutStyles';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { Product } from '../types/Product';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
-import {
-  Alert,
-  SafeAreaView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Animated,
-} from 'react-native';
+import React, { useState, useCallback, Suspense } from 'react';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native';
+import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useCart } from '@hooks/useCart';
+import { COLORS, SPACING, TYPOGRAPHY } from '@theme/theme';
+import type { CheckoutScreenNavigationProp } from '@navigation/types';
 
-export type FormState = {
-  address: string;
-  paymentMethod: string;
-  errors: string[];
-};
+// Lazy loading des composants
+const OrderSummary = React.lazy(() => import('@components/checkout/OrderSummary'));
+const PaymentForm = React.lazy(() => import('@components/checkout/PaymentForm'));
 
-const CheckoutScreen: React.FC = () => {
-  const { cart, clearCart, removeFromCart } = useCart(); // Assurez-vous que removeFromCart existe dans CartContext
-  const { user } = useAuth();
-  const { loading, processOrder } = useOrderProcessing(clearCart);
-  const { itemAnimations, overlayAnimations } = useCheckoutAnimations(cart.length);
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const buttonScale = new Animated.Value(1); // Pour l’effet au clic
+// Composant de chargement
+const LoadingComponent = () => (
+  <View style={styles.loadingContainer}>
+    <View style={styles.loadingContent}>
+      <View style={styles.loadingTitle} />
+      <View style={styles.loadingDetails} />
+    </View>
+  </View>
+);
 
-  const [formState, setFormState] = useState<FormState>({
-    address: '',
-    paymentMethod: '',
-    errors: [],
-  });
+export const CheckoutScreen: React.FC = () => {
+  const navigation = useNavigation<CheckoutScreenNavigationProp>();
+  const { items, totalPrice, clearCart } = useCart();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const totalPrice = useMemo(
-    () => cart.reduce((sum: number, item: Product) => sum + item.price * (item.quantity ?? 1), 0),
-    [cart]
-  );
-
-  const handleOrder = useCallback(async () => {
-    if (!user) return Alert.alert('Erreur', 'Authentification requise');
-
-    const [isValid, errors] = validateCheckoutForm(formState.address, formState.paymentMethod);
-    if (!isValid) return setFormState((prev) => ({ ...prev, errors }));
-
-    Alert.alert(
-      'Confirmer la commande',
-      `Voulez-vous confirmer votre commande de ${totalPrice} FCFA ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Confirmer',
-          onPress: async () => {
-            const success = await processOrder(
-              user.uid,
-              cart,
-              totalPrice,
-              formState.address,
-              formState.paymentMethod
-            );
-            if (success) {
-              Alert.alert('Succès', 'Commande passée avec succès !', [
-                { text: 'OK', onPress: () => navigation.navigate('Commandes') },
-              ]);
-            } else {
-              Alert.alert('Erreur', 'Échec du traitement de la commande. Veuillez réessayer.');
-            }
+  const handlePayment = useCallback(async (paymentDetails: {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: string;
+    cardHolderName: string;
+  }) => {
+    setIsLoading(true);
+    try {
+      // Simuler un appel API pour le traitement du paiement
+      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      
+      // Vider le panier après un paiement réussi
+      clearCart();
+      
+      // Afficher un message de succès
+      Alert.alert(
+        'Paiement réussi',
+        'Votre commande a été confirmée',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.reset({
+              index: 0,
+              routes: [{ name: 'Accueil' }],
+            }),
           },
-        },
-      ]
-    );
-  }, [user, formState, cart, totalPrice, processOrder, navigation]);
-
-  const handleRemoveItem = useCallback((item: Product) => {
-    Alert.alert(
-      'Supprimer l’article',
-      `Voulez-vous supprimer ${item.name} du panier ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          onPress: () => {
-            removeFromCart(item.id, 1); // Supprime une unité à la fois
-          },
-        },
-      ]
-    );
-  }, [removeFromCart]);
-
-  const animateButtonPress = () => {
-    Animated.sequence([
-      Animated.timing(buttonScale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(buttonScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
-  };
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Erreur',
+        'Une erreur est survenue lors du traitement du paiement'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [clearCart, navigation]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={localStyles.container}
-      >
-        <ScrollView
-          contentContainerStyle={localStyles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          alwaysBounceVertical={true}
-        >
-          <Text style={localStyles.title}>Finaliser la commande</Text>
-
-          {formState.errors.length > 0 && (
-            <View style={localStyles.errorContainer}>
-              {formState.errors.map((error, index) => (
-                <Text key={index} style={localStyles.errorText}>{error}</Text>
-              ))}
-            </View>
-          )}
-
-          <CheckoutForm
-            formState={formState}
-            onFormChange={(newState) =>
-              setFormState((prev) => ({
-                ...prev,
-                ...newState,
-                errors: newState.errors || prev.errors,
-              }))
-            }
-          />
-
-          <Text style={localStyles.sectionTitle}>Articles ({cart.length})</Text>
-          {cart.map((item, index) =>
-            itemAnimations[index] ? (
-              <View key={item.id}>
-                <AnimatedCartItem item={item} animation={itemAnimations[index]} />
-                <TouchableOpacity
-                  style={localStyles.removeButton}
-                  onPress={() => handleRemoveItem(item)}
-                >
-                  <Text style={localStyles.removeButtonText}>Supprimer</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          )}
-
-          <View style={localStyles.summaryContainer}>
-            <Text style={localStyles.summaryTitle}>Résumé</Text>
-            <View style={localStyles.summaryRow}>
-              <Text>Total</Text>
-              <Text style={localStyles.totalPrice}>{totalPrice} FCFA</Text>
-            </View>
-          </View>
-
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <TouchableOpacity
-              style={[localStyles.orderButton, loading && localStyles.orderButtonDisabled]}
-              onPress={() => {
-                animateButtonPress();
-                handleOrder();
-              }}
-              disabled={loading || cart.length === 0}
-              accessibilityLabel="Confirmer et passer la commande"
-              accessibilityHint={`Finalise votre commande de ${totalPrice} FCFA avec les informations fournies`}
-            >
-              <Text style={localStyles.orderButtonText}>
-                {loading ? 'Traitement en cours...' : 'Passer la commande'}
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <LoadingOverlay visible={loading} animations={overlayAnimations} />
-    </SafeAreaView>
+    <ScrollView style={styles.container}>
+      <Suspense fallback={<LoadingComponent />}>
+        <OrderSummary items={items} totalPrice={totalPrice} />
+      </Suspense>
+      <Suspense fallback={<LoadingComponent />}>
+        <PaymentForm onSubmit={handlePayment} isLoading={isLoading} />
+      </Suspense>
+    </ScrollView>
   );
 };
 
-const localStyles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 20, paddingBottom: 100 }, // Plus d’espace en bas
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#212529' },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 10, color: '#343a40' },
-  errorContainer: { backgroundColor: '#ffebee', padding: 10, borderRadius: 8, marginBottom: 15 },
-  errorText: { color: '#d32f2f', fontSize: 14 },
-  summaryContainer: { marginTop: 20, padding: 15, backgroundColor: '#f8f9fa', borderRadius: 10 },
-  summaryTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10, color: '#343a40' },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  totalPrice: { fontWeight: 'bold', fontSize: 16, color: '#212529' },
-  orderButton: {
-    backgroundColor: '#FF4952',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 25,
-    marginBottom: 30,
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background.default,
   },
-  orderButtonDisabled: { backgroundColor: '#adb5bd', opacity: 0.7 },
-  orderButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  removeButton: {
-    backgroundColor: '#d32f2f',
-    padding: 8,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 10,
+  loadingContainer: {
+    padding: SPACING.md,
+    backgroundColor: COLORS.background.paper,
+    borderRadius: 8,
+    marginBottom: SPACING.md,
   },
-  removeButtonText: { color: 'white', fontSize: 14 },
+  loadingContent: {
+    padding: SPACING.md,
+  },
+  loadingTitle: {
+    width: '60%',
+    height: 24,
+    backgroundColor: COLORS.background.default,
+    borderRadius: 4,
+    marginBottom: SPACING.md,
+  },
+  loadingDetails: {
+    width: '100%',
+    height: 100,
+    backgroundColor: COLORS.background.default,
+    borderRadius: 4,
+  },
 });
-
-export default CheckoutScreen;

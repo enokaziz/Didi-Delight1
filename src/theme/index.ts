@@ -10,3 +10,5 @@ export const theme = {
     background: '#FFFFFF',
   },
 };
+
+export * from './theme';

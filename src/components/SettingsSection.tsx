@@ -1,7 +1,7 @@
-import React from 'react';
-import { View } from 'react-native';
-import { List, Divider } from 'react-native-paper';
-import { settingsStyles } from '@styles';
+import React from "react";
+import { View } from "react-native";
+import { List, Divider } from "react-native-paper";
+import { settingsStyles } from "@styles/settings.styles";
 
 interface SettingsItem {
   title: string;
@@ -18,10 +18,15 @@ interface SettingsSectionProps {
   items: SettingsItem[];
 }
 
-export const SettingsSection: React.FC<SettingsSectionProps> = ({ title, items }) => {
+export const SettingsSection: React.FC<SettingsSectionProps> = ({
+  title,
+  items,
+}) => {
   return (
     <View style={settingsStyles.section}>
-      <List.Subheader style={settingsStyles.sectionTitle}>{title}</List.Subheader>
+      <List.Subheader style={settingsStyles.sectionTitle}>
+        {title}
+      </List.Subheader>
       <List.Section>
         {items.map((item, index) => (
           <List.Item
@@ -29,12 +34,11 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({ title, items }
             title={item.title}
             description={item.description}
             left={() => (
-              <List.Icon 
-                icon={item.icon} 
-                color={item.iconColor || '#000'} 
-              />
+              <List.Icon icon={item.icon} color={item.iconColor || "#000"} />
             )}
-            right={typeof item.right === 'function' ? item.right : () => item.right}
+            right={
+              typeof item.right === "function" ? item.right : () => item.right
+            }
             onPress={item.onPress}
             titleStyle={item.titleStyle}
           />
@@ -43,4 +47,4 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({ title, items }
       <Divider />
     </View>
   );
-}; 
+};

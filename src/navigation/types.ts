@@ -1,8 +1,8 @@
-import { Product } from "../types/Product";
-import { PaymentMethod } from "../types/PaymentMethod";
+import type { RouteProp } from "@react-navigation/native";
 import { NavigationProp } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { PaymentMethod } from "../types/PaymentMethod";
+import { Product } from "../types/Product";
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -28,8 +28,6 @@ export type RootStackParamList = {
   OrderDetails: { orderId: string };
   ClientTabs: undefined;
   ChangerPasswordScreen: undefined;
-  Accueil: undefined;
-  ProductDetails: { product: Product };
 };
 
 export type NavigationProps = NavigationProp<RootStackParamList>;
@@ -46,6 +44,14 @@ export type AdminStackParamList = {
   PromotionManagement: undefined;
   InventoryManagement: undefined;
   LoyaltyPointsManagement: undefined;
+  OrderDetails: { orderId: string };
+  OrderList: undefined;
+  SalesReport: undefined;
+  OrdersInProgress: undefined;
+  CompletedOrders: undefined;
+  CustomerList: undefined;
+  Reports: undefined;
+  ProductList: undefined;
 };
 
 export type ClientStackParamList = {
@@ -66,7 +72,7 @@ export type ClientStackParamList = {
   EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
   OrderDetails: { orderId: string };
-  ProductDetails: { product: Product };
+  ProductDetails: { product: Product }; // Ajout de la route ProductDetails
 };
 
 export type PaymentStackParamList = {
@@ -79,6 +85,7 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  BiometricAuth: undefined;
 };
 
 export type EventsStackParamList = {
@@ -86,9 +93,28 @@ export type EventsStackParamList = {
   EventDetails: { eventId: string };
   CreateEvent: undefined;
   EditEvent: { eventId: string };
-  Events : undefined;
+  Events: undefined;
 };
 
-export type CartScreenNavigationProp = NativeStackNavigationProp<ClientStackParamList, 'Panier'>;
-export type CheckoutScreenNavigationProp = NativeStackNavigationProp<ClientStackParamList, 'Checkout'>;
-export type ProductDetailsScreenRouteProp = RouteProp<ClientStackParamList, 'ProductDetails'>;
+export type CartScreenNavigationProp = NativeStackNavigationProp<
+  ClientStackParamList,
+  "Panier"
+>;
+export type CheckoutScreenNavigationProp = NativeStackNavigationProp<
+  ClientStackParamList,
+  "Checkout"
+>;
+export type ProductDetailsScreenRouteProp = NativeStackNavigationProp<
+  ClientStackParamList,
+  "ProductDetails"
+>;
+
+export type ProductDetailsRouteProp = RouteProp<
+  ClientStackParamList,
+  "ProductDetails"
+>;
+
+export type ProductDetailsScreenNavigationProp = NativeStackNavigationProp<
+  ClientStackParamList,
+  "ProductDetails"
+>;

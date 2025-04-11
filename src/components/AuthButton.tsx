@@ -1,13 +1,22 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, Animated } from "react-native";
-import LinearGradient from "react-native-linear-gradient";
+import {
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { AuthButtonProps } from "../types/AuthButtonProps";
 
-const AuthButton: React.FC<AuthButtonProps> = ({ onPress, isLoading, isLogin }) => {
+const AuthButton = ({ onPress, isLoading, isLogin }: AuthButtonProps) => {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.95, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePressOut = () => {
@@ -26,7 +35,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onPress, isLoading, isLogin }) 
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <LinearGradient
-          colors={["#4c669f", "#3b5998", "#192f6a"]}
+          colors={["#6a11cb", "#2575fc"]}
           style={styles.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -49,17 +58,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 20,
-    shadowColor: "#4f46e5",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   gradient: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
     paddingVertical: 18,
   },
   buttonPressed: {
@@ -67,9 +76,10 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-    letterSpacing: 0.5,
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textAlign: "center",
   },
 });
 

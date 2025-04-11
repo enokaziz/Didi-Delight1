@@ -5,7 +5,12 @@ import { EmailInputProps } from "../types/EmailInputProps";
 
 const EmailInput: React.FC<EmailInputProps> = ({ value, onChange, error }) => (
   <View style={[styles.inputContainer, error ? styles.inputError : null]}>
-    <Ionicons name="mail-outline" size={20} color="#6c757d" style={styles.inputIcon} />
+    <Ionicons
+      name="mail-outline"
+      size={20}
+      color="#6c757d"
+      style={styles.inputIcon}
+    />
     <TextInput
       placeholder="Adresse email"
       value={value}

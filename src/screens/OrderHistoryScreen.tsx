@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, Animated, ActivityIndicator, Alert } from 'react-native';
-import { useAuth } from '@contexts/AuthContext';
-import { subscribeToUserOrders } from '../services/orderService';
-import { FilterBar, ORDER_STATUSES } from '@components/orders/FilterBar';
-import { OrderItem } from '@components/orders/OrderItem';
-import { styles } from '@styles/orderHistory.styles';
-import type { Order } from '../types/Order';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Animated,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useAuth } from "@contexts/AuthContext";
+import { subscribeToUserOrders } from "../services/orderService";
+import { FilterBar, ORDER_STATUSES } from "@components/orders/FilterBar";
+import { OrderItem } from "@components/orders/OrderItem";
+import { styles } from "@styles/orderHistory.styles";
+import type { Order } from "../types/Order";
 
-type OrderStatus = typeof ORDER_STATUSES[keyof typeof ORDER_STATUSES];
+type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 
 const OrderHistoryScreen: React.FC = () => {
   const { user } = useAuth();
@@ -15,7 +22,9 @@ const OrderHistoryScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [selectedFilter, setSelectedFilter] = useState<OrderStatus | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<OrderStatus | null>(
+    null
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -26,7 +35,11 @@ const OrderHistoryScreen: React.FC = () => {
       (newOrders: Order[]) => {
         setOrders(newOrders);
         setLoading(false);
-        Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }).start();
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start();
       },
       (error: Error) => {
         setError(error.message);
@@ -42,27 +55,35 @@ const OrderHistoryScreen: React.FC = () => {
   }, []);
 
   const filteredOrders = useMemo(() => {
-    return selectedFilter ? orders.filter((order) => order.status === selectedFilter) : orders;
+    return selectedFilter
+      ? orders.filter((order) => order.status === selectedFilter)
+      : orders;
   }, [orders, selectedFilter]);
 
-  const viewOrderDetails = useCallback((orderId: string) => {
-    if (!orderId) {
-      Alert.alert("Erreur", "ID de commande manquant");
-      return;
-    }
-    const selectedOrder = orders.find((order) => order.id === orderId);
-    if (selectedOrder) {
-      Alert.alert(
-        `Détails de la commande ${orderId}`,
-        `Articles : ${selectedOrder.items.length}\nMéthode de paiement : ${selectedOrder.paymentMethod || "Non spécifiée"}\nAdresse de livraison : ${selectedOrder.shippingAddress || "Non spécifiée"}`,
-        [{ text: "OK" }]
-      );
-    }
-  }, [orders]);
+  const viewOrderDetails = useCallback(
+    (orderId: string) => {
+      if (!orderId) {
+        Alert.alert("Erreur", "ID de commande manquant");
+        return;
+      }
+      const selectedOrder = orders.find((order) => order.id === orderId);
+      if (selectedOrder) {
+        Alert.alert(
+          `Détails de la commande ${orderId}`,
+          `Articles : ${selectedOrder.items.length}\nMéthode de paiement : ${selectedOrder.paymentMethod || "Non spécifiée"}\nAdresse de livraison : ${selectedOrder.shippingAddress || "Non spécifiée"}`,
+          [{ text: "OK" }]
+        );
+      }
+    },
+    [orders]
+  );
 
-  const renderItem = useCallback(({ item }: { item: Order }) => (
-    <OrderItem item={item} onViewDetails={viewOrderDetails} />
-  ), [viewOrderDetails]);
+  const renderItem = useCallback(
+    ({ item }: { item: Order }) => (
+      <OrderItem item={item} onViewDetails={viewOrderDetails} />
+    ),
+    [viewOrderDetails]
+  );
 
   if (loading) {
     return (
@@ -83,7 +104,10 @@ const OrderHistoryScreen: React.FC = () => {
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Text style={styles.title}>Mes Commandes</Text>
-      <FilterBar selectedFilter={selectedFilter} onFilterChange={filterOrders} />
+      <FilterBar
+        selectedFilter={selectedFilter}
+        onFilterChange={filterOrders}
+      />
       {filteredOrders.length === 0 ? (
         <Text style={styles.noOrderText}>Aucune commande trouvée.</Text>
       ) : (

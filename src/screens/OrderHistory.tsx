@@ -1,59 +1,84 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { View, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, RefreshControl, Image } from "react-native"
-import { Text, Appbar, Card, Chip, Divider, ActivityIndicator, useTheme, Button, Searchbar } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
-import { db } from "../firebase/firebaseConfig"
-import { useAuth } from "../contexts/AuthContext"
+import { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  SafeAreaView,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
+} from "react-native";
+import {
+  Text,
+  Appbar,
+  Card,
+  Chip,
+  Divider,
+  ActivityIndicator,
+  useTheme,
+  Button,
+  Searchbar,
+} from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
+import { useAuth } from "../contexts/AuthContext";
 
 // Types pour les commandes
-type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
 type OrderItem = {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  imageUrl: string
-}
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+};
 
 type Order = {
-  id: string
-  date: Date
-  status: OrderStatus
-  total: number
-  items: OrderItem[]
-  address: string
-  paymentMethod: string
-  trackingNumber?: string
-}
+  id: string;
+  date: Date;
+  status: OrderStatus;
+  total: number;
+  items: OrderItem[];
+  address: string;
+  paymentMethod: string;
+  trackingNumber?: string;
+};
 
 const OrderHistory = () => {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterStatus, setFilterStatus] = useState<OrderStatus | null>(null)
-  const navigation = useNavigation()
-  const { user } = useAuth()
-  const theme = useTheme()
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<OrderStatus | null>(null);
+  const navigation = useNavigation();
+  const { user } = useAuth();
+  const theme = useTheme();
 
   // Fonction pour récupérer les commandes depuis Firestore
   const fetchOrders = async () => {
-    if (!user) return
+    if (!user) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const ordersRef = collection(db, "orders")
-      const q = query(ordersRef, where("userId", "==", user.uid), orderBy("date", "desc"))
+      const ordersRef = collection(db, "orders");
+      const q = query(
+        ordersRef,
+        where("userId", "==", user.uid),
+        orderBy("date", "desc")
+      );
 
-      const querySnapshot = await getDocs(q)
-      const ordersList: Order[] = []
+      const querySnapshot = await getDocs(q);
+      const ordersList: Order[] = [];
 
       querySnapshot.forEach((doc) => {
-        const data = doc.data()
+        const data = doc.data();
         ordersList.push({
           id: doc.id,
           date: data.date.toDate(),
@@ -63,72 +88,74 @@ const OrderHistory = () => {
           address: data.address,
           paymentMethod: data.paymentMethod,
           trackingNumber: data.trackingNumber,
-        })
-      })
+        });
+      });
 
-      setOrders(ordersList)
+      setOrders(ordersList);
     } catch (error) {
-      console.error("Erreur lors de la récupération des commandes:", error)
+      console.error("Erreur lors de la récupération des commandes:", error);
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchOrders()
-  }, [user])
+    fetchOrders();
+  }, [user]);
 
   const onRefresh = () => {
-    setRefreshing(true)
-    fetchOrders()
-  }
+    setRefreshing(true);
+    fetchOrders();
+  };
 
   // Filtrer les commandes par statut et recherche
   const filteredOrders = orders.filter((order) => {
-    const matchesStatus = filterStatus ? order.status === filterStatus : true
+    const matchesStatus = filterStatus ? order.status === filterStatus : true;
     const matchesSearch = searchQuery
       ? order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      : true
-    return matchesStatus && matchesSearch
-  })
+        order.items.some((item) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : true;
+    return matchesStatus && matchesSearch;
+  });
 
   // Obtenir la couleur en fonction du statut de la commande
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case "pending":
-        return "#FFC107" // Jaune
+        return "#FFC107"; // Jaune
       case "processing":
-        return "#2196F3" // Bleu
+        return "#2196F3"; // Bleu
       case "shipped":
-        return "#9C27B0" // Violet
+        return "#9C27B0"; // Violet
       case "delivered":
-        return "#4CAF50" // Vert
+        return "#4CAF50"; // Vert
       case "cancelled":
-        return "#F44336" // Rouge
+        return "#F44336"; // Rouge
       default:
-        return "#757575" // Gris
+        return "#757575"; // Gris
     }
-  }
+  };
 
   // Traduire le statut en français
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
       case "pending":
-        return "En attente"
+        return "En attente";
       case "processing":
-        return "En traitement"
+        return "En traitement";
       case "shipped":
-        return "Expédiée"
+        return "Expédiée";
       case "delivered":
-        return "Livrée"
+        return "Livrée";
       case "cancelled":
-        return "Annulée"
+        return "Annulée";
       default:
-        return status
+        return status;
     }
-  }
+  };
 
   // Formater la date
   const formatDate = (date: Date) => {
@@ -138,8 +165,8 @@ const OrderHistory = () => {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   // Rendu d'un élément de commande
   const renderOrderItem = ({ item }: { item: Order }) => (
@@ -152,7 +179,10 @@ const OrderHistory = () => {
           </View>
           <Chip
             mode="outlined"
-            style={[styles.statusChip, { borderColor: getStatusColor(item.status) }]}
+            style={[
+              styles.statusChip,
+              { borderColor: getStatusColor(item.status) },
+            ]}
             textStyle={{ color: getStatusColor(item.status) }}
           >
             {getStatusText(item.status)}
@@ -177,7 +207,11 @@ const OrderHistory = () => {
               </View>
             </View>
           ))}
-          {item.items.length > 2 && <Text style={styles.moreItems}>+{item.items.length - 2} autres articles</Text>}
+          {item.items.length > 2 && (
+            <Text style={styles.moreItems}>
+              +{item.items.length - 2} autres articles
+            </Text>
+          )}
         </View>
 
         <Divider style={styles.divider} />
@@ -194,7 +228,7 @@ const OrderHistory = () => {
             onPress={() => {
               // Navigation vers les détails de la commande
               // navigation.navigate('OrderDetails', { orderId: item.id });
-              console.log("Voir les détails de la commande", item.id)
+              console.log("Voir les détails de la commande", item.id);
             }}
           >
             Détails
@@ -205,7 +239,7 @@ const OrderHistory = () => {
               style={styles.reorderButton}
               onPress={() => {
                 // Logique pour commander à nouveau
-                console.log("Commander à nouveau", item.id)
+                console.log("Commander à nouveau", item.id);
               }}
             >
               Commander à nouveau
@@ -214,7 +248,7 @@ const OrderHistory = () => {
         </View>
       </Card.Content>
     </Card>
-  )
+  );
 
   // Rendu de l'en-tête avec les filtres
   const renderHeader = () => (
@@ -232,9 +266,24 @@ const OrderHistory = () => {
           onPress={() => setFilterStatus(null)}
           style={[styles.filterChip, !filterStatus && styles.activeFilterChip]}
         >
-          <Text style={[styles.filterChipText, !filterStatus && styles.activeFilterChipText]}>Tous</Text>
+          <Text
+            style={[
+              styles.filterChipText,
+              !filterStatus && styles.activeFilterChipText,
+            ]}
+          >
+            Tous
+          </Text>
         </TouchableOpacity>
-        {(["pending", "processing", "shipped", "delivered", "cancelled"] as OrderStatus[]).map((status) => (
+        {(
+          [
+            "pending",
+            "processing",
+            "shipped",
+            "delivered",
+            "cancelled",
+          ] as OrderStatus[]
+        ).map((status) => (
           <TouchableOpacity
             key={status}
             onPress={() => setFilterStatus(status)}
@@ -248,7 +297,10 @@ const OrderHistory = () => {
               style={[
                 styles.filterChipText,
                 filterStatus === status && styles.activeFilterChipText,
-                { color: filterStatus === status ? "#fff" : getStatusColor(status) },
+                {
+                  color:
+                    filterStatus === status ? "#fff" : getStatusColor(status),
+                },
               ]}
             >
               {getStatusText(status)}
@@ -257,7 +309,7 @@ const OrderHistory = () => {
         ))}
       </View>
     </View>
-  )
+  );
 
   // Rendu de l'état vide
   const renderEmptyComponent = () => (
@@ -278,18 +330,22 @@ const OrderHistory = () => {
           mode="contained"
           style={styles.resetButton}
           onPress={() => {
-            setSearchQuery("")
-            setFilterStatus(null)
+            setSearchQuery("");
+            setFilterStatus(null);
           }}
         >
           Réinitialiser les filtres
         </Button>
       )}
-      <Button mode="contained" style={styles.shopButton} onPress={() => navigation.navigate("ClientApp" as never)}>
+      <Button
+        mode="contained"
+        style={styles.shopButton}
+        onPress={() => navigation.navigate("ClientApp" as never)}
+      >
         Parcourir les produits
       </Button>
     </View>
-  )
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -312,13 +368,17 @@ const OrderHistory = () => {
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={renderEmptyComponent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+            />
           }
         />
       )}
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -493,7 +553,6 @@ const styles = StyleSheet.create({
   shopButton: {
     backgroundColor: "#FF4952",
   },
-})
+});
 
-export default OrderHistory
-
+export default OrderHistory;

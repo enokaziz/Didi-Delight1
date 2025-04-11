@@ -33,7 +33,9 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
     <TouchableOpacity
       onPress={toggleShowPassword}
       style={styles.eyeIcon}
-      accessibilityLabel={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      accessibilityLabel={
+        showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
+      }
       accessibilityRole="button"
     >
       <Ionicons

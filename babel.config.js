@@ -7,7 +7,6 @@ module.exports = function(api) {
       }]
     ],
     plugins: [
-      'module:expo-asset', // Changé ici
       [
         "module:react-native-dotenv",
         {

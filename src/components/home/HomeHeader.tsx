@@ -1,9 +1,15 @@
 // components/home/HomeHeader.tsx
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS, SPACING, TYPOGRAPHY } from "../../theme/theme";
-import SortPicker from '../../components/home/SortPicker';
+import SortPicker from "../../components/home/SortPicker";
 
 interface HomeHeaderProps {
   title: string;
@@ -13,12 +19,11 @@ interface HomeHeaderProps {
   SortPicker?: React.ReactNode;
 }
 
-const HomeHeader: React.FC<HomeHeaderProps> = ({ 
-  title, 
-  productsCount, 
+const HomeHeader: React.FC<HomeHeaderProps> = ({
+  title,
+  productsCount,
   onResetFilters,
-  showReset = false
-  
+  showReset = false,
 }) => {
   const translateY = new Animated.Value(-50);
   const opacity = new Animated.Value(0);
@@ -39,13 +44,13 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   }, []);
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
-        styles.container, 
-        { 
+        styles.container,
+        {
           transform: [{ translateY }],
-          opacity 
-        }
+          opacity,
+        },
       ]}
     >
       <View style={styles.titleContainer}>
@@ -54,10 +59,10 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
           <Text style={styles.badgeText}>{productsCount}</Text>
         </View>
       </View>
-      
+
       {showReset && (
-        <TouchableOpacity 
-          style={styles.resetButton} 
+        <TouchableOpacity
+          style={styles.resetButton}
           onPress={onResetFilters}
           activeOpacity={0.7}
         >

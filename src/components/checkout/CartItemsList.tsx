@@ -1,10 +1,13 @@
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, Animated, FlatList } from 'react-native';
-import AnimatedCartItem from './AnimatedCartItem';
-import { styles } from '@styles/checkout.styles';
-import type { Product } from '../../types/Product';
-import { CartItem } from "./CartItem";
-import { checkoutStyles } from '@styles';
+import React, { useCallback } from "react";
+import { View, Text, TouchableOpacity, Animated, FlatList } from "react-native";
+import AnimatedCartItem from "./AnimatedCartItem";
+import styles from "@styles/checkoutStyles";
+import { Product } from "../../types/Product";
+import { checkoutStyles } from "../../styles";
+
+interface CartItem extends Product {
+  quantity: number;
+}
 
 interface CartItemsListProps {
   items: CartItem[];
@@ -18,19 +21,21 @@ export const CartItemsList = ({
   onRemoveItem,
 }: CartItemsListProps) => {
   return (
-    <View style={checkoutStyles.itemsList}>
+    <View style={styles.itemsList}>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <CartItem
+          <AnimatedCartItem
             item={item}
-            onQuantityChange={(quantity) => onQuantityChange(item.id, quantity)}
+            onQuantityChange={(quantity: number) =>
+              onQuantityChange(item.id, quantity)
+            }
             onRemove={() => onRemoveItem(item.id)}
           />
         )}
-        contentContainerStyle={checkoutStyles.itemsListContent}
+        contentContainerStyle={styles.itemsListContent}
       />
     </View>
   );
-}; 
+};

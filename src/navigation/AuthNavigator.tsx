@@ -4,8 +4,9 @@ import AuthScreen from "../screens/AuthScreen";
 import BiometricAuthScreen from "../screens/BiometricAuthScreen";
 import ResetPasswordScreen from "../screens/ResetPasswordScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthStackParamList } from "./types";
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<AuthStackParamList>();
 
 const AuthNavigator = () => {
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
@@ -28,8 +29,8 @@ const AuthNavigator = () => {
         <Stack.Screen name="BiometricAuth" component={BiometricAuthScreen} />
       ) : (
         <>
-          <Stack.Screen name="AuthScreen" component={AuthScreen} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          <Stack.Screen name="Login" component={AuthScreen} />
+          <Stack.Screen name="ForgotPassword" component={ResetPasswordScreen} />
         </>
       )}
     </Stack.Navigator>

@@ -1,11 +1,8 @@
-import type { RouteProp } from "@react-navigation/native";
-import { NavigationProp } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { PaymentMethod } from "../types/PaymentMethod";
 import { Product } from "../types/Product";
+import { PaymentMethod } from "../types/PaymentMethod";
 
 export type RootStackParamList = {
-  Auth: undefined;
+  AuthNavigator: undefined;
   AuthScreen: undefined;
   ClientApp: undefined;
   AdminApp: undefined;
@@ -30,8 +27,6 @@ export type RootStackParamList = {
   ChangerPasswordScreen: undefined;
 };
 
-export type NavigationProps = NavigationProp<RootStackParamList>;
-
 export type AdminStackParamList = {
   AdminDashboard: undefined;
   AdminChats: undefined;
@@ -40,10 +35,10 @@ export type AdminStackParamList = {
   AddEditProduct: { product?: Product };
   Auth: undefined;
   AuthScreen: undefined;
-  EventManagement: undefined;
+  EventManagement: { screen: "EventManagementScreen" };
   PromotionManagement: undefined;
-  InventoryManagement: undefined;
-  LoyaltyPointsManagement: undefined;
+  InventoryManagement: { screen: "InventoryManagementScreen" };
+  LoyaltyPointsManagement: { screen: "LoyaltyPointsManagementScreen" };
   OrderDetails: { orderId: string };
   OrderList: undefined;
   SalesReport: undefined;
@@ -52,6 +47,7 @@ export type AdminStackParamList = {
   CustomerList: undefined;
   Reports: undefined;
   ProductList: undefined;
+  AnalyticsScreen: undefined;
 };
 
 export type ClientStackParamList = {
@@ -72,7 +68,6 @@ export type ClientStackParamList = {
   EditPaymentMethod: { paymentMethod: PaymentMethod };
   HelpCenter: undefined;
   OrderDetails: { orderId: string };
-  ProductDetails: { product: Product }; // Ajout de la route ProductDetails
 };
 
 export type PaymentStackParamList = {
@@ -95,26 +90,3 @@ export type EventsStackParamList = {
   EditEvent: { eventId: string };
   Events: undefined;
 };
-
-export type CartScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "Panier"
->;
-export type CheckoutScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "Checkout"
->;
-export type ProductDetailsScreenRouteProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ProductDetails"
->;
-
-export type ProductDetailsRouteProp = RouteProp<
-  ClientStackParamList,
-  "ProductDetails"
->;
-
-export type ProductDetailsScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ProductDetails"
->;

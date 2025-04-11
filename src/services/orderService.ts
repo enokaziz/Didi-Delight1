@@ -1,16 +1,34 @@
 //services/orderService.ts
-import { 
-  collection, addDoc, query, where, getDocs, 
-  doc, updateDoc, getDoc, onSnapshot, orderBy, limit } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { Order } from "../types/Order";
-import { Product } from "../types/Product"
+import { Product } from "../types/Product";
 
+interface OrderItem extends Product {
+  notes?: string;
+  quantity: number;
+}
 
 /**
  * Envoie une nouvelle commande à Firestore.
- * @param order - L'objet commande à ajouter.
- * @returns La commande ajoutée.
+ * @param userId - L'identifiant de l'utilisateur.
+ * @param items - La liste des produits dans la commande.
+ * @param total - Le montant total de la commande.
+ * @param shippingAddress - L'adresse de livraison.
+ * @param paymentMethod - Le méthode de paiement.
+ * @returns L'identifiant de la commande.
  */
 // 1. Création de commande
 export const createOrder = async (
@@ -19,11 +37,18 @@ export const createOrder = async (
   total: number,
   shippingAddress: string,
   paymentMethod: string
-): Promise<Order> => {
+): Promise<string> => {
   try {
-    const newOrder: Order = {
+    // Convertir Product[] en OrderItem[]
+    const orderItems: OrderItem[] = items.map((product) => ({
+      ...product,
+      notes: "",
+      quantity: 1, // Valeur par défaut
+    }));
+
+    const newOrder = {
       userId,
-      items,
+      items: orderItems,
       total,
       status: "En attente",
       createdAt: new Date().toISOString(),
@@ -31,8 +56,8 @@ export const createOrder = async (
       paymentMethod,
     };
 
-    await addDoc(collection(db, "orders"), newOrder);
-    return newOrder;
+    const docRef = await addDoc(collection(db, "orders"), newOrder);
+    return docRef.id;
   } catch (error) {
     console.error("Erreur lors de la création de la commande :", error);
     throw new Error("Échec de la création de la commande");
@@ -56,10 +81,13 @@ export const subscribeToUserOrders = (
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const orders = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data() as Order,
-        }));
+        const orders = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+          } as Order;
+        });
         callback(orders);
       },
       (error) => {
@@ -76,26 +104,34 @@ export const subscribeToUserOrders = (
   }
 };
 
-
 /**
  * Récupère l'historique des commandes d'un utilisateur.
  * @param userId - L'identifiant de l'utilisateur.
  * @returns La liste des commandes de l'utilisateur.
  */
 export const getOrderHistory = async (userId: string): Promise<Order[]> => {
-    try {
-        const ordersRef = collection(db, "orders");
-        const q = query(ordersRef, where("userId", "==", userId));
-        const querySnapshot = await getDocs(q);
-        const orders: Order[] = [];
-        querySnapshot.forEach((doc) => {
-            orders.push({ id: doc.id, ...doc.data() } as Order);
-        });
-        return orders;
-    } catch (error) {
-        console.error("Erreur lors de la récupération de l'historique des commandes :", error);
-        throw new Error("Impossible de récupérer l'historique des commandes. Veuillez vérifier vos permissions.");
-    }
+  try {
+    const ordersRef = collection(db, "orders");
+    const q = query(ordersRef, where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    const orders: Order[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      orders.push({
+        ...data,
+        id: doc.id,
+      } as Order);
+    });
+    return orders;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération de l'historique des commandes :",
+      error
+    );
+    throw new Error(
+      "Impossible de récupérer l'historique des commandes. Veuillez vérifier vos permissions."
+    );
+  }
 };
 
 // 3. Récupération des commandes (pagination)
@@ -110,19 +146,28 @@ export const getUserOrders = async (
       collection(db, "orders"),
       where("userId", "==", userId),
       orderBy("createdAt", "desc"),
-      limit(pageSize),
+      limit(pageSize)
       // startAfter(offset) // À implémenter si nécessaire
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as Order }));
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+      } as Order;
+    });
   } catch (error) {
     console.error("Erreur de récupération :", error);
     throw new Error("Échec de la récupération des commandes");
   }
 };
 
-export const getOrderById = async (userId: string, orderId: string): Promise<Order> => {
+export const getOrderById = async (
+  userId: string,
+  orderId: string
+): Promise<Order> => {
   const orderRef = doc(db, `users/${userId}/orders`, orderId);
   const orderSnap = await getDoc(orderRef);
   if (!orderSnap.exists()) throw new Error("Commande introuvable");

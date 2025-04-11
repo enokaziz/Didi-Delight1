@@ -3,11 +3,13 @@ import { Animated, Text, StyleSheet, View } from 'react-native';
 import { Product } from '../../types/Product';
 
 type Props = {
-  item: Product;
-  animation: Animated.Value;
+  item: Product & { quantity?: number };
+  animation?: Animated.Value;
+  onQuantityChange?: (quantity: number) => void;
+  onRemove?: () => void;
 };
 
-const AnimatedCartItem = ({ item, animation }: Props) => {
+const AnimatedCartItem = ({ item, animation, onQuantityChange, onRemove }: Props) => {
   if (!animation) return null;
 
   return (

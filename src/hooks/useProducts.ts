@@ -21,12 +21,12 @@ export const useProducts = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [lastDoc, setLastDoc] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
-  
+
   // États pour les filtres et la recherche
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const PRODUCTS_PER_PAGE = 20;
 
   // Validation des données produit
@@ -76,10 +76,10 @@ export const useProducts = () => {
         }
 
         const querySnapshot = await getDocs(q);
-        
+
         // Vérifier s'il y a plus de données à charger
         setHasMore(querySnapshot.docs.length === PRODUCTS_PER_PAGE);
-        
+
         // Traiter les résultats
         const newProducts = querySnapshot.docs
           .map((doc) => {
@@ -95,8 +95,10 @@ export const useProducts = () => {
           .filter(Boolean) as Product[];
 
         // Mettre à jour les produits (remplacer ou ajouter)
-        setProducts((prev) => (isRefresh ? newProducts : [...prev, ...newProducts]));
-        
+        setProducts((prev) =>
+          isRefresh ? newProducts : [...prev, ...newProducts]
+        );
+
         // Mettre à jour le dernier document pour la pagination
         if (querySnapshot.docs.length > 0) {
           setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
@@ -150,7 +152,7 @@ export const useProducts = () => {
   // Tri des produits
   const sortedAndSearchedProducts = useMemo(() => {
     let result = [...searchedProducts];
-    
+
     if (sortOption === "priceAsc") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortOption === "priceDesc") {
@@ -158,7 +160,7 @@ export const useProducts = () => {
     } else if (sortOption === "nameAsc") {
       result.sort((a, b) => a.name.localeCompare(b.name));
     }
-    
+
     return result;
   }, [searchedProducts, sortOption]);
 
@@ -182,12 +184,12 @@ export const useProducts = () => {
     categories,
     totalCount: sortedAndSearchedProducts.length,
     hasMore,
-    
+
     // États
     loading,
     error,
     refreshing,
-    
+
     // Filtres et recherche
     selectedCategory,
     setSelectedCategory,
@@ -195,7 +197,7 @@ export const useProducts = () => {
     setSortOption,
     searchQuery,
     setSearchQuery,
-    
+
     // Actions
     resetFilters,
     onRefresh,

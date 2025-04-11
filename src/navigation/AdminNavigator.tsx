@@ -10,8 +10,9 @@ import AddEditProductScreen from "../screens/AddEditProductScreen";
 import EventManagementScreen from "../screens/admin/EventManagementScreen";
 import PromotionManagementScreen from "../screens/admin/PromotionManagementScreen";
 import InventoryManagementScreen from "../screens/admin/InventoryManagementScreen";
-import LoyaltyPointsManagementScreen from "../screens/admin/LoyaltyPointsManagementScreen";
+import LoyaltyManagementScreen from "../screens/admin/LoyaltyManagementScreen";
 import OrderDetailsScreen from "../screens/admin/OrderDetailsScreen";
+import AnalyticsScreen from "../screens/admin/AnalyticsScreen";
 
 const Stack = createStackNavigator<AdminStackParamList>();
 
@@ -67,13 +68,18 @@ const AdminNavigator = () => {
       />
       <Stack.Screen
         name="LoyaltyPointsManagement"
-        component={LoyaltyPointsManagementScreen}
-        options={{ title: "Gestion des Points de Fidélité" }}
+        component={LoyaltyManagementScreen}
+        options={{ title: "Gestion des Points de Fidélité", headerShown: false }}
       />
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
         options={{ title: "Détails de la Commande" }}
+      />
+      <Stack.Screen
+        name="AnalyticsScreen"
+        component={AnalyticsScreen}
+        options={{ title: "Tableau de Bord Analytique" }}
       />
     </Stack.Navigator>
   );

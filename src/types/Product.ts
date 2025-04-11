@@ -12,5 +12,4 @@ export interface Product {
   quantity?: number;
   isPromotional?: boolean;
   isPopular?: boolean;
-  image?: string;
 }

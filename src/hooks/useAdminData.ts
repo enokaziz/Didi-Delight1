@@ -115,30 +115,37 @@ export const useAdminData = (): AdminData => {
         }
       );
 
-      // Récupérer les utilisateurs
-      const usersQuery = query(
-        collection(db, "users"),
-        orderBy("createdAt", "desc")
-      );
-      onSnapshot(
-        usersQuery,
-        (snapshot) => {
-          const usersData = snapshot.docs.map(
-            (doc) =>
-              ({
-                id: doc.id,
-                ...doc.data(),
-              }) as User
-          );
-          setUsers(usersData);
-        },
-        (error) => {
-          console.error(
-            "Erreur lors de la récupération des utilisateurs:",
-            error
-          );
-        }
-      );
+      // Récupérer les utilisateurs - avec gestion d'erreur améliorée
+      try {
+        // Simplifions la requête en supprimant l'orderBy qui peut causer des problèmes
+        // si certains documents n'ont pas le champ createdAt
+        const usersQuery = query(collection(db, "users"));
+        
+        onSnapshot(
+          usersQuery,
+          (snapshot) => {
+            const usersData = snapshot.docs.map(
+              (doc) =>
+                ({
+                  id: doc.id,
+                  ...doc.data(),
+                }) as User
+            );
+            setUsers(usersData);
+          },
+          (error) => {
+            console.error(
+              "Erreur lors de la récupération des utilisateurs:",
+              error
+            );
+            // Ne pas bloquer le reste de l'application en cas d'erreur de permissions
+            setUsers([]);
+          }
+        );
+      } catch (error) {
+        console.error("Exception lors de l'accès à la collection users:", error);
+        setUsers([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Erreur inconnue"));
       setLoading(false);

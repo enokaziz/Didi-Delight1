@@ -1,27 +1,37 @@
-"use client"
+"use client";
 
-import { useRef, useState, useCallback } from "react"
-import { createDrawerNavigator } from "@react-navigation/drawer"
-import { Ionicons, MaterialIcons } from "@expo/vector-icons"
-import { Animated, Pressable, View, Text, StyleSheet } from "react-native"
-import HomeScreen from "../screens/HomeScreen"
-import OrderHistoryScreen from "../screens/OrderHistoryScreen"
-import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen"
-import ChatScreen from "../screens/ChatScreen"
-import { CartStackNavigator } from "./CartStackNavigator"
-import { SettingsStackNavigator } from "./SettingsStackNavigator"
-import EventsNavigator from "./EventsNavigator"
-import PaymentNavigator from "./PaymentNavigator"
+import { useRef, useState, useCallback } from "react";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Animated, Pressable, View, Text, StyleSheet } from "react-native";
+import HomeScreen from "../screens/HomeScreen";
+import OrderHistoryScreen from "../screens/OrderHistoryScreen";
+import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen";
+import ChatScreen from "../screens/ChatScreen";
+import LoyaltyPointsScreen from "../screens/client/LoyaltyPointsScreen";
+import { CartStackNavigator } from "./CartStackNavigator";
+import { SettingsStackNavigator } from "./SettingsStackNavigator";
+import EventsNavigator from "./EventsNavigator";
+import PaymentNavigator from "./PaymentNavigator";
 
 // Style 7: Ludique et Coloré - Sidebar Version
 
 type IconConfigType = {
-  [key in "Accueil" | "Panier" | "Commandes" | "Événements" | "Suivi Livraison" | "Paramètres" | "Chat" | "Paiement"]: {
-    lib: typeof Ionicons | typeof MaterialIcons
-    name: string
-    color: string
-  }
-}
+  [key in
+    | "Accueil"
+    | "Panier"
+    | "Commandes"
+    | "Événements"
+    | "Suivi Livraison"
+    | "Paramètres"
+    | "Chat"
+    | "Paiement"
+    | "Fidélité"]: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+};
 
 const ICON_CONFIG: IconConfigType = {
   Accueil: { lib: Ionicons, name: "home", color: "#FF6B6B" },
@@ -32,37 +42,51 @@ const ICON_CONFIG: IconConfigType = {
   Paramètres: { lib: Ionicons, name: "settings", color: "#06D6A0" },
   Chat: { lib: Ionicons, name: "chatbubbles", color: "#FF9F1C" },
   Paiement: { lib: Ionicons, name: "card", color: "#8338EC" },
-}
+  "Fidélité": { lib: Ionicons, name: "star", color: "#F04E98" },
+};
 
-type IconLibrary = typeof Ionicons | typeof MaterialIcons
+type IconLibrary = typeof Ionicons | typeof MaterialIcons;
 
-const getIcon = (Lib: IconLibrary, name: string | undefined, color: string, size: number) => {
-  const IconComponent = Lib
+const getIcon = (
+  Lib: IconLibrary,
+  name: string | undefined,
+  color: string,
+  size: number
+) => {
+  const IconComponent = Lib;
   if (!name || !IconComponent) {
-    console.warn(`Icône manquante pour ${name}`)
-    return <MaterialIcons name="error-outline" size={size} color="red" />
+    console.warn(`Icône manquante pour ${name}`);
+    return <MaterialIcons name="error-outline" size={size} color="red" />;
   }
-  return <IconComponent name={name as any} size={size} color={color} />
-}
+  return <IconComponent name={name as any} size={size} color={color} />;
+};
 
-const Drawer = createDrawerNavigator()
+const Drawer = createDrawerNavigator();
 
 // Custom drawer content component
 const CustomDrawerContent = ({ navigation, state }: any) => {
-  const [focusedRouteName, setFocusedRouteName] = useState<string>("Accueil")
-  const iconScale = useRef(new Animated.Value(1)).current
+  const [focusedRouteName, setFocusedRouteName] = useState<string>("Accueil");
+  const iconScale = useRef(new Animated.Value(1)).current;
 
   const handleNavigation = useCallback(
     (routeName: string) => {
       Animated.sequence([
-        Animated.timing(iconScale, { toValue: 1.4, duration: 200, useNativeDriver: true }),
-        Animated.timing(iconScale, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start()
-      setFocusedRouteName(routeName)
-      navigation.navigate(routeName)
+        Animated.timing(iconScale, {
+          toValue: 1.4,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(iconScale, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      setFocusedRouteName(routeName);
+      navigation.navigate(routeName);
     },
-    [navigation, iconScale],
-  )
+    [navigation, iconScale]
+  );
 
   return (
     <View style={styles.drawerContainer}>
@@ -72,36 +96,58 @@ const CustomDrawerContent = ({ navigation, state }: any) => {
       </View>
 
       <View style={styles.drawerContent}>
-        {Object.entries(ICON_CONFIG).map(([routeName, { lib, name, color }]) => {
-          const isFocused = routeName === focusedRouteName
-          const iconColor = isFocused ? color : "#6c757d"
-          const iconSize = isFocused ? 24 : 22
+        {Object.entries(ICON_CONFIG).map(
+          ([routeName, { lib, name, color }]) => {
+            const isFocused = routeName === focusedRouteName;
+            const iconColor = isFocused ? color : "#6c757d";
+            const iconSize = isFocused ? 24 : 22;
 
-          // Check for chat notifications
-          const hasBadge = routeName === "Chat"
+            // Check for chat notifications
+            const hasBadge = routeName === "Chat";
 
-          return (
-            <Pressable
-              key={routeName}
-              style={[styles.drawerItem, isFocused && { ...styles.drawerItemFocused, backgroundColor: `${color}20` }]}
-              onPress={() => handleNavigation(routeName)}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: isFocused ? color : "#f8f9fa" }]}>
-                <Animated.View style={{ transform: [{ scale: isFocused ? iconScale : 1 }] }}>
-                  {getIcon(lib, name, isFocused ? "#fff" : color, iconSize)}
-                </Animated.View>
-              </View>
-              <Text style={[styles.drawerItemText, isFocused && { ...styles.drawerItemTextFocused, color }]}>
-                {routeName === "Chat" ? "Support" : routeName}
-              </Text>
-              {hasBadge && (
-                <View style={[styles.badge, { backgroundColor: color }]}>
-                  <Text style={styles.badgeText}>2</Text>
+            return (
+              <Pressable
+                key={routeName}
+                style={[
+                  styles.drawerItem,
+                  isFocused && {
+                    ...styles.drawerItemFocused,
+                    backgroundColor: `${color}20`,
+                  },
+                ]}
+                onPress={() => handleNavigation(routeName)}
+              >
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: isFocused ? color : "#f8f9fa" },
+                  ]}
+                >
+                  <Animated.View
+                    style={{
+                      transform: [{ scale: isFocused ? iconScale : 1 }],
+                    }}
+                  >
+                    {getIcon(lib, name, isFocused ? "#fff" : color, iconSize)}
+                  </Animated.View>
                 </View>
-              )}
-            </Pressable>
-          )
-        })}
+                <Text
+                  style={[
+                    styles.drawerItemText,
+                    isFocused && { ...styles.drawerItemTextFocused, color },
+                  ]}
+                >
+                  {routeName === "Chat" ? "Support" : routeName}
+                </Text>
+                {hasBadge && (
+                  <View style={[styles.badge, { backgroundColor: color }]}>
+                    <Text style={styles.badgeText}>2</Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          }
+        )}
       </View>
 
       <View style={styles.drawerFooter}>
@@ -111,8 +157,8 @@ const CustomDrawerContent = ({ navigation, state }: any) => {
         </Pressable>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const ClientNavigator = () => {
   return (
@@ -120,8 +166,8 @@ const ClientNavigator = () => {
       initialRouteName="Accueil"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={({ route }) => {
-        const routeName = route.name as keyof typeof ICON_CONFIG
-        const { color } = ICON_CONFIG[routeName]
+        const routeName = route.name as keyof typeof ICON_CONFIG;
+        const { color } = ICON_CONFIG[routeName];
 
         return {
           headerShown: true,
@@ -145,7 +191,7 @@ const ClientNavigator = () => {
           swipeEdgeWidth: 50,
           drawerActiveTintColor: color,
           drawerInactiveTintColor: "#6c757d",
-        }
+        };
       }}
     >
       <Drawer.Screen
@@ -204,9 +250,16 @@ const ClientNavigator = () => {
           drawerLabel: "Paiement",
         }}
       />
+      <Drawer.Screen
+        name="Fidélité"
+        component={LoyaltyPointsScreen}
+        options={{
+          drawerLabel: "Programme Fidélité",
+        }}
+      />
     </Drawer.Navigator>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   drawerContainer: {
@@ -295,7 +348,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: "600",
   },
-})
+});
 
-export default ClientNavigator
-
+export default ClientNavigator;

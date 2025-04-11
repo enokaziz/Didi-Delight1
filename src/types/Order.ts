@@ -39,14 +39,8 @@ export interface OrderHistoryEntry {
 }
 
 export interface Order {
-  phone: any;
-  deliveryNotes: any;
-  isUrgent: any;
   id: string;
   userId: string;
-  userName: string;
-  userPhone: string;
-  userEmail: string;
   items: OrderItem[];
   totalAmount: number;
   status: OrderStatus;
@@ -54,6 +48,18 @@ export interface Order {
   paymentStatus: string;
   createdAt: any; // Permettre différents types de date
   updatedAt: any; // Permettre différents types de date
+  shippingAddress: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  phone: any;
+  deliveryNotes: any;
+  isUrgent: any;
+  userName: string;
+  userPhone: string;
+  userEmail: string;
   deliveryAddress: string;
   notes?: string;
   deliveryFee?: number;

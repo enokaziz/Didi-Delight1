@@ -6,7 +6,7 @@ import { ActivityIndicator, Snackbar } from "react-native-paper";
 // import { useNavigation, NavigationProp } from "@react-navigation/native";
 // import { RootStackParamList } from "../navigation/types";
 
-// type BiometricAuthNavigationProp = NavigationProp<RootStackParamList, "Auth">;
+// type BiometricAuthNavigationProp = NavigationProp<RootStackParamList, "AuthNavigator">;
 
 const BiometricAuthScreen = () => {
   // const { loginWithBiometric } = useAuth();

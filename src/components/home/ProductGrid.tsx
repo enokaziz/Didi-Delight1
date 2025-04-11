@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
-import { Animated, View, FlatList } from 'react-native';
+import { Animated, View, FlatList, StyleSheet } from 'react-native';
 import { ProductCard } from '@components/common';
-import { styles as homeStyles } from '@styles/screens/home/styles';
 import type { Product } from '../../types/Product';
 
 interface ProductGridProps {
@@ -9,6 +8,22 @@ interface ProductGridProps {
   onAddToCart: (product: Product) => void;
   fadeAnim: Animated.Value;
 }
+
+const homeStyles = StyleSheet.create({
+  grid: {
+    flex: 1,
+    paddingHorizontal: 8,
+  },
+  gridContent: {
+    paddingBottom: 32,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  productCardContainer: {
+    // existing styles...
+  },
+});
 
 const ProductGrid: React.FC<ProductGridProps> = memo(({ products, onAddToCart, fadeAnim }) => {
   return (

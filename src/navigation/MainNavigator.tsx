@@ -7,10 +7,10 @@ import AuthNavigator from "./AuthNavigator";
 import ClientNavigator from "./ClientNavigator";
 import AdminNavigator from "./AdminNavigator";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
-import MyAccountScreen from '../screens/MyAccountScreen';
-import PromotionsScreen from '../screens/PromotionsScreen';
-import InventoryScreen from '../screens/InventoryScreen';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import MyAccountScreen from "../screens/MyAccountScreen";
+import PromotionsScreen from "../screens/PromotionsScreen";
+import InventoryScreen from "../screens/InventoryScreen";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { RootStackParamList } from "../navigation/types";
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,18 +27,15 @@ const MainNavigator = () => {
     );
   }
 
-  
-
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!user ? (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
+        <Stack.Screen name="AuthNavigator" component={AuthNavigator} />
       ) : userRole === "admin" ? (
         <Stack.Screen name="AdminApp" component={AdminNavigator} />
       ) : (
         <Stack.Screen name="ClientApp" component={ClientNavigator} />
       )}
-      
     </Stack.Navigator>
   );
 };

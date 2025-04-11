@@ -1,6 +1,16 @@
-//src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
-import { User, onAuthStateChanged, updatePassword as firebaseUpdatePassword } from "firebase/auth";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+import {
+  User,
+  onAuthStateChanged,
+  updatePassword as firebaseUpdatePassword,
+} from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { Alert } from "react-native";
@@ -13,7 +23,10 @@ interface AuthContextType {
   userRole: UserRole;
   loading: boolean;
   logout: () => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updatePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
   loginWithBiometric: () => Promise<void>;
 }
 
@@ -60,12 +73,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Si la connexion est réussie, vous pouvez mettre à jour l'état de l'utilisateur ici
         setUser(user); // Assurez-vous de récupérer l'utilisateur approprié
       }
-    } catch (error: any) { // Spécification du type d'erreur
+    } catch (error: any) {
+      // Spécification du type d'erreur
       console.error("Erreur lors de la connexion biométrique :", error);
       Alert.alert("Erreur", error.message);
     }
   };
-  
+
   const logout = async () => {
     try {
       await auth.signOut();
@@ -80,7 +94,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const updatePassword = async (currentPassword: string, newPassword: string) => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     try {
       if (user) {
         await firebaseUpdatePassword(user, newPassword);
@@ -94,16 +111,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-
   const contextValue = useMemo(
-    () => ({ user, userRole, loading, logout, updatePassword, loginWithBiometric }),
+    () => ({
+      user,
+      userRole,
+      loading,
+      logout,
+      updatePassword,
+      loginWithBiometric,
+    }),
     [user, userRole, loading]
   );
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
 

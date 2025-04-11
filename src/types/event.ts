@@ -1,4 +1,6 @@
-export type EventType = 'wedding' | 'birthday' | 'ceremony' | 'other';
+export type EventType = "wedding" | "birthday" | "ceremony" | "other";
+
+export type EventStatus = "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
 
 export interface EventProduct {
   productId: string;
@@ -16,7 +18,7 @@ export interface Event {
   location: string;
   expectedGuests: number;
   products: EventProduct[];
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  status: EventStatus;
   totalAmount: number;
   deposit?: number;
   depositPaid: boolean;
@@ -25,4 +27,11 @@ export interface Event {
   contactEmail?: string;
   createdAt: Date;
   updatedAt: Date;
+  adminNotes?: string;
+  adminActions?: {
+    action: "approved" | "rejected" | "modified";
+    date: Date;
+    adminId: string;
+    reason?: string;
+  }[];
 }

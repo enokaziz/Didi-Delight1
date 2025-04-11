@@ -11,7 +11,7 @@ import { useAuth } from "@contexts/AuthContext";
 import { subscribeToUserOrders } from "../services/orderService";
 import { FilterBar, ORDER_STATUSES } from "@components/orders/FilterBar";
 import { OrderItem } from "@components/orders/OrderItem";
-import { styles } from "@styles/orderHistory.styles";
+import { orderHistoryStyles } from "@styles/orderHistory.styles";
 import type { Order } from "../types/Order";
 
 type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
@@ -87,7 +87,7 @@ const OrderHistoryScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={orderHistoryStyles.container}>
         <ActivityIndicator size="large" color="#FF4952" />
       </View>
     );
@@ -95,21 +95,21 @@ const OrderHistoryScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={orderHistoryStyles.container}>
+        <Text style={orderHistoryStyles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <Text style={styles.title}>Mes Commandes</Text>
+    <Animated.View style={[orderHistoryStyles.container, { opacity: fadeAnim }]}>
+      <Text style={orderHistoryStyles.title}>Mes Commandes</Text>
       <FilterBar
         selectedFilter={selectedFilter}
         onFilterChange={filterOrders}
       />
       {filteredOrders.length === 0 ? (
-        <Text style={styles.noOrderText}>Aucune commande trouvée.</Text>
+        <Text style={orderHistoryStyles.noOrderText}>Aucune commande trouvée.</Text>
       ) : (
         <FlatList
           data={filteredOrders}

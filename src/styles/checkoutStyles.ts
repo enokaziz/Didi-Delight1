@@ -9,6 +9,13 @@ export default StyleSheet.create({
   container: {
     padding: 20,
   },
+  itemsList: {
+    flex: 1,
+    backgroundColor: '#fff'
+  },
+  itemsListContent: {
+    padding: 16
+  },
   title: {
     fontSize: 24,
     fontWeight: '800',

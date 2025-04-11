@@ -16,9 +16,10 @@ import { register, login } from "../services/authService";
 import EmailInput from "../components/EmailInput";
 import PasswordInput from "../components/PasswordInput";
 import AuthButton from "../components/AuthButton";
+import ResetPasswordScreen from "./ResetPasswordScreen";
 import ErrorMessage from "../components/ErrorMessage";
 
-const AuthScreen: React.FC = () => {
+const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -216,7 +217,10 @@ const AuthScreen: React.FC = () => {
               isLogin={isLogin}
             />
             {isLogin && (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("ResetPassword")}
+                style={styles.forgotPasswordButton}
+              >
                 <Text style={styles.forgotPasswordText}>
                   Mot de passe oublié ?
                 </Text>
@@ -228,6 +232,7 @@ const AuthScreen: React.FC = () => {
             <Text style={styles.separatorText}>Ou continuer avec</Text>
             <View style={styles.separatorLine} />
           </View>
+
           <View style={styles.socialButtonsContainer}>
             <TouchableOpacity
               style={styles.socialButton}
@@ -344,8 +349,16 @@ const styles = StyleSheet.create({
   toggleContainer: { marginTop: 25 },
   toggleText: { color: "#6c757d", textAlign: "center", fontSize: 15 },
   toggleHighlight: { color: "#4f46e5", fontWeight: "600" },
-  forgotPassword: { alignSelf: "flex-end", marginBottom: 15 },
-  forgotPasswordText: { color: "#4f46e5", fontSize: 14 },
+  forgotPasswordButton: {
+    alignSelf: "flex-end",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: "#4f46e5",
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

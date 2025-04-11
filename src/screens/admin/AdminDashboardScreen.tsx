@@ -1,7 +1,11 @@
 "use client";
 
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useNavigation,
+  CommonActions,
+  StackActions,
+} from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,8 +23,12 @@ import {
   View,
 } from "react-native";
 import { useAdminData } from "../../hooks/useAdminData";
-import type { AdminStackParamList } from "../../navigation/types";
+import type {
+  AdminStackParamList,
+  RootStackParamList,
+} from "../../navigation/types";
 import { logout } from "../../services/authService";
+import { useAuth } from "../../contexts/AuthContext";
 import StatusOrdersModal from "../../components/orders/StatusOrdersModal";
 import type { OrderStatus } from "../../types/Order";
 
@@ -35,6 +43,7 @@ type AdminDashboardNavigationProp = StackNavigationProp<
 const AdminDashboardPatisserie: React.FC = () => {
   const { orders, products, loading, error, updateOrder } = useAdminData();
   const navigation = useNavigation<AdminDashboardNavigationProp>();
+  const { logout: authLogout } = useAuth(); // Accéder à la fonction logout du contexte d'authentification
   const [fadeAnim] = useState(new Animated.Value(0));
 
   // États pour gérer le modal
@@ -106,12 +115,10 @@ const AdminDashboardPatisserie: React.FC = () => {
 
   const handleLogout = useCallback(async () => {
     try {
-      await logout();
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.replace("Auth");
-      }
+      // Utiliser la fonction logout du contexte d'authentification
+      // qui gère déjà la déconnexion et la mise à jour de l'état
+      await authLogout();
+      // La redirection se fera automatiquement via le MainNavigator
     } catch (error) {
       console.error("Erreur lors de la déconnexion :", error);
       Alert.alert(
@@ -119,7 +126,7 @@ const AdminDashboardPatisserie: React.FC = () => {
         "Une erreur s'est produite lors de la déconnexion. Veuillez réessayer."
       );
     }
-  }, [navigation]);
+  }, [authLogout]);
 
   const getProductName = useCallback(
     (productId: string) => {
@@ -198,8 +205,11 @@ const AdminDashboardPatisserie: React.FC = () => {
                 <Text style={styles.greeting}>Bonjour Didi 👋</Text>
                 <Text style={styles.title}>Tableau de Bord</Text>
               </View>
-              <TouchableOpacity style={styles.profileButton}>
-                <Ionicons name="person" size={24} color="#fff" />
+              <TouchableOpacity 
+                style={styles.profileButton}
+                onPress={() => handleNavigation("AnalyticsScreen")}
+              >
+                <FontAwesome5 name="chart-bar" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
 
@@ -245,7 +255,7 @@ const AdminDashboardPatisserie: React.FC = () => {
                     <View
                       style={[
                         styles.statIconContainer,
-                        { backgroundColor: "#7CB07C" },
+                        { backgroundColor: "#006400" },
                       ]}
                     >
                       <FontAwesome5
@@ -266,7 +276,7 @@ const AdminDashboardPatisserie: React.FC = () => {
                     <View
                       style={[
                         styles.statIconContainer,
-                        { backgroundColor: "#F7A4C5" },
+                        { backgroundColor: "#F6BE00" },
                       ]}
                     >
                       <FontAwesome5
@@ -304,7 +314,7 @@ const AdminDashboardPatisserie: React.FC = () => {
                     <View
                       style={[
                         styles.statIconContainer,
-                        { backgroundColor: "#FF6B6B" },
+                        { backgroundColor: "#ff0000" },
                       ]}
                     >
                       <FontAwesome5
@@ -359,7 +369,7 @@ const AdminDashboardPatisserie: React.FC = () => {
                 <View style={styles.productsSection}>
                   <View style={styles.sectionHeader}>
                     <Text style={styles.productsSectionTitle}>
-                      <FontAwesome5 name="star" size={18} color="#F04E98" />{" "}
+                      <FontAwesome5 name="star" size={18} color="#81312F" />{" "}
                       Produits Populaires
                     </Text>
                     <TouchableOpacity

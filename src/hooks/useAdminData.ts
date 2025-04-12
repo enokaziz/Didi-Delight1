@@ -10,7 +10,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { db, auth } from "../firebase/firebaseConfig";
 
 interface AdminData {
   orders: Order[];
@@ -32,6 +32,19 @@ export const useAdminData = (): AdminData => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [unsubscribes, setUnsubscribes] = useState<(() => void)[]>([]);
+
+  useEffect(() => {
+    return () => {
+      unsubscribes.forEach((unsub) => {
+        try {
+          unsub();
+        } catch (err) {
+          console.error("Erreur lors de l'annulation d'un abonnement:", err);
+        }
+      });
+    };
+  }, [unsubscribes]);
 
   const updateOrder = useCallback(
     async (orderId: string, updates: Partial<Order>) => {
@@ -46,10 +59,18 @@ export const useAdminData = (): AdminData => {
 
   const refresh = useCallback(async (filters?: { status?: OrderStatus }) => {
     try {
+      if (!auth.currentUser) {
+        console.log("Aucun utilisateur authentifié - nettoyage des données");
+        setUsers([]);
+        setOrders([]);
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
       setError(null);
       setLoading(true);
 
-      // Récupérer les commandes
       const ordersQuery = collection(db, "orders");
       let queryWithConstraints = query(ordersQuery);
 
@@ -65,7 +86,7 @@ export const useAdminData = (): AdminData => {
         orderBy("createdAt", "desc")
       );
 
-      onSnapshot(
+      const ordersUnsub = onSnapshot(
         queryWithConstraints,
         (snapshot) => {
           const ordersData = snapshot.docs.map((doc) => {
@@ -87,6 +108,7 @@ export const useAdminData = (): AdminData => {
           setLoading(false);
         },
         (error) => {
+          console.error("Erreur sur l'abonnement aux commandes:", error);
           setError(
             error instanceof Error
               ? error
@@ -96,9 +118,8 @@ export const useAdminData = (): AdminData => {
         }
       );
 
-      // Récupérer les produits
       const productsQuery = query(collection(db, "products"));
-      onSnapshot(
+      const productsUnsub = onSnapshot(
         productsQuery,
         (snapshot) => {
           const productsData = snapshot.docs.map(
@@ -111,17 +132,13 @@ export const useAdminData = (): AdminData => {
           setProducts(productsData);
         },
         (error) => {
-          console.error("Erreur lors de la récupération des produits:", error);
+          console.error("Erreur sur l'abonnement aux produits:", error);
         }
       );
 
-      // Récupérer les utilisateurs - avec gestion d'erreur améliorée
       try {
-        // Simplifions la requête en supprimant l'orderBy qui peut causer des problèmes
-        // si certains documents n'ont pas le champ createdAt
         const usersQuery = query(collection(db, "users"));
-        
-        onSnapshot(
+        const usersUnsub = onSnapshot(
           usersQuery,
           (snapshot) => {
             const usersData = snapshot.docs.map(
@@ -134,19 +151,18 @@ export const useAdminData = (): AdminData => {
             setUsers(usersData);
           },
           (error) => {
-            console.error(
-              "Erreur lors de la récupération des utilisateurs:",
-              error
-            );
-            // Ne pas bloquer le reste de l'application en cas d'erreur de permissions
+            console.error("Erreur sur l'abonnement aux utilisateurs:", error);
             setUsers([]);
           }
         );
+
+        setUnsubscribes([ordersUnsub, productsUnsub, usersUnsub]);
       } catch (error) {
         console.error("Exception lors de l'accès à la collection users:", error);
         setUsers([]);
       }
     } catch (err) {
+      console.error("Erreur globale dans refresh:", err);
       setError(err instanceof Error ? err : new Error("Erreur inconnue"));
       setLoading(false);
     }

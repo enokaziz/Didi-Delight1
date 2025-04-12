@@ -48,14 +48,47 @@ export const promotionService = {
       const docRef = doc(collection(db, COLLECTION_NAME));
       const now = new Date();
 
-      const newPromotion: Promotion = {
-        ...promotion,
+      // Création d'un objet de base avec les champs obligatoires
+      const newPromotion: any = {
         id: docRef.id,
+        title: promotion.title,
+        description: promotion.description || "",
+        startDate: promotion.startDate,
+        endDate: promotion.endDate,
         usageCount: 0,
         createdAt: now,
         updatedAt: now,
         active: promotion.active ?? true, // Par défaut actif si non spécifié
       };
+      
+      // Ajout des champs optionnels seulement s'ils ont des valeurs
+      if (promotion.discountType) {
+        newPromotion.discountType = promotion.discountType;
+      }
+      
+      if (promotion.discountValue) {
+        newPromotion.discountValue = promotion.discountValue;
+      }
+      
+      if (promotion.minimumPurchase && promotion.minimumPurchase > 0) {
+        newPromotion.minimumPurchase = promotion.minimumPurchase;
+      }
+      
+      if (promotion.usageLimit && promotion.usageLimit > 0) {
+        newPromotion.usageLimit = promotion.usageLimit;
+      }
+      
+      if (promotion.conditions && promotion.conditions.trim() !== "") {
+        newPromotion.conditions = promotion.conditions.trim();
+      }
+      
+      if (promotion.applicableProducts && promotion.applicableProducts.length > 0) {
+        newPromotion.applicableProducts = promotion.applicableProducts;
+      }
+      
+      if (promotion.applicableCategories && promotion.applicableCategories.length > 0) {
+        newPromotion.applicableCategories = promotion.applicableCategories;
+      }
 
       await setDoc(docRef, newPromotion);
       return newPromotion;

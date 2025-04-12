@@ -30,7 +30,7 @@ const AuthNavigator = () => {
       ) : (
         <>
           <Stack.Screen name="Login" component={AuthScreen} />
-          <Stack.Screen name="ForgotPassword" component={ResetPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         </>
       )}
     </Stack.Navigator>

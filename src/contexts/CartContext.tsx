@@ -3,8 +3,8 @@ import { Product } from "../types/Product";
 
 interface CartContextType {
   cart: Product[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (id: string, quantity?: number) => void; // Ajout de quantity optionnel
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (id: string, quantity?: number) => void;
   clearCart: () => void;
   updateQuantity: (id: string, quantity: number) => void;
 }
@@ -14,19 +14,19 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<Product[]>([]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity: number = 1) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
-        // Si le produit existe, incrémente la quantité
+        // Si le produit existe, met à jour la quantité
         return prevCart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: (item.quantity ?? 1) + 1 }
+            ? { ...item, quantity: (item.quantity ?? 1) + quantity }
             : item
         );
       }
-      // Sinon, ajoute le produit avec une quantité initiale de 1
-      return [...prevCart, { ...product, quantity: 1 }];
+      // Sinon, ajoute le produit avec la quantité spécifiée
+      return [...prevCart, { ...product, quantity }];
     });
   };
 
@@ -37,7 +37,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
       const currentQuantity = existingItem.quantity ?? 1;
       if (currentQuantity <= quantity) {
-        // Si la quantité à supprimer est >= à la quantité actuelle, supprime l’élément
+        // Si la quantité à supprimer est >= à la quantité actuelle, supprime l'élément
         return prevCart.filter((item) => item.id !== id);
       }
       // Sinon, réduit la quantité
@@ -73,3 +73,5 @@ export const useCart = () => {
   }
   return context;
 };
+
+export type { CartContextType };

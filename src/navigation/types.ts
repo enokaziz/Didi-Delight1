@@ -1,8 +1,11 @@
 import { Product } from "../types/Product";
 import { PaymentMethod } from "../types/PaymentMethod";
+import { Order } from "../types/Order";
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
-  AuthNavigator: undefined;
+  Auth: undefined;
   AuthScreen: undefined;
   ClientApp: undefined;
   AdminApp: undefined;
@@ -25,7 +28,13 @@ export type RootStackParamList = {
   OrderDetails: { orderId: string };
   ClientTabs: undefined;
   ChangerPasswordScreen: undefined;
+  ResetPassword: undefined;
+  ProductDetails: { product: Product };
 };
+
+export type ProductDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ProductDetails'>;
+export type CheckoutScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Checkout'>;
+export type CartScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Panier'>;
 
 export type AdminStackParamList = {
   AdminDashboard: undefined;
@@ -35,19 +44,11 @@ export type AdminStackParamList = {
   AddEditProduct: { product?: Product };
   Auth: undefined;
   AuthScreen: undefined;
-  EventManagement: { screen: "EventManagementScreen" };
+  EventManagement: undefined;
   PromotionManagement: undefined;
-  InventoryManagement: { screen: "InventoryManagementScreen" };
-  LoyaltyPointsManagement: { screen: "LoyaltyPointsManagementScreen" };
+  InventoryManagement: undefined;
+  LoyaltyPointsManagement: undefined;
   OrderDetails: { orderId: string };
-  OrderList: undefined;
-  SalesReport: undefined;
-  OrdersInProgress: undefined;
-  CompletedOrders: undefined;
-  CustomerList: undefined;
-  Reports: undefined;
-  ProductList: undefined;
-  AnalyticsScreen: undefined;
 };
 
 export type ClientStackParamList = {
@@ -81,6 +82,7 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   BiometricAuth: undefined;
+  ResetPassword: undefined;
 };
 
 export type EventsStackParamList = {

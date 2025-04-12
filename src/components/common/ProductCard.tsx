@@ -1,6 +1,12 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from "../../theme/theme";
+import {
+  COLORS,
+  SPACING,
+  BORDER_RADIUS,
+  TYPOGRAPHY,
+  SHADOWS,
+} from "../../theme/theme";
 import { Product } from "../../types/Product";
 
 interface ProductCardProps {
@@ -33,39 +39,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.background.card,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.sm,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
     margin: SPACING.sm,
     alignItems: "center",
-    ...SHADOWS.small,
+    ...SHADOWS.medium,
   },
   image: {
     width: 120,
     height: 120,
-    borderRadius: BORDER_RADIUS.sm,
-    marginBottom: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
   },
   content: {
     alignItems: "center",
+    gap: SPACING.xs,
   },
   name: {
     ...TYPOGRAPHY.body,
     fontWeight: "600",
     color: COLORS.text.primary,
     textAlign: "center",
+    marginBottom: SPACING.xs,
   },
   price: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.text.secondary,
-    marginBottom: SPACING.sm,
+    color: COLORS.primary.main,
+    fontWeight: "bold",
+    marginBottom: SPACING.md,
   },
   button: {
     backgroundColor: COLORS.primary.main,
-    paddingVertical: SPACING.xs,
-    paddingHorizontal: SPACING.md,
-    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
   },
   buttonText: {
     ...TYPOGRAPHY.body,
@@ -87,8 +94,8 @@ const styles = StyleSheet.create({
   badgePromo: {
     position: "absolute",
     top: SPACING.xs,
-    left: SPACING.xs,
-    backgroundColor: COLORS.primary.main,
+    right: SPACING.xs,
+    backgroundColor: COLORS.secondary.main,
     color: "#FFF",
     paddingVertical: SPACING.xs,
     paddingHorizontal: SPACING.sm,

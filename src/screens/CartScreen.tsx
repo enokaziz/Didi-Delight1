@@ -1,10 +1,10 @@
-import React, { useCallback, Suspense } from 'react';
+import React, { useCallback, Suspense, useMemo } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useCart } from '@hooks/useCart';
+import { useCart } from '../contexts/CartContext';
 import { COLORS, SPACING, TYPOGRAPHY } from '@theme/theme';
-import type { CartScreenNavigationProp } from '@navigation/types';
-import type { Product } from '../types/Product';
+import { Product } from '../types/Product';
+import { CartScreenNavigationProp } from '../navigation/types';
 import { TouchableOpacity, Text } from 'react-native';
 
 // Lazy loading du CartItem
@@ -23,7 +23,7 @@ const CartItemLoading = () => (
 
 export const CartScreen: React.FC = () => {
   const navigation = useNavigation<CartScreenNavigationProp>();
-  const { items, totalPrice, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
 
   const handleClearCart = useCallback(() => {
     Alert.alert(
@@ -48,25 +48,30 @@ export const CartScreen: React.FC = () => {
   }, [navigation]);
 
   const renderItem = useCallback(
-    ({ item }: { item: { product: Product; quantity: number } }) => (
+    ({ item }: { item: Product }) => (
       <Suspense fallback={<CartItemLoading />}>
         <CartItem
-          product={item.product}
-          quantity={item.quantity}
-          onQuantityChange={(quantity: number) => updateQuantity(item.product.id, quantity)}
-          onRemove={() => removeFromCart(item.product.id)}
+          product={item}
+          quantity={item.quantity ?? 1}
+          onQuantityChange={(quantity: number) => updateQuantity(item.id, quantity)}
+          onRemove={() => removeFromCart(item.id)}
         />
       </Suspense>
     ),
     [removeFromCart, updateQuantity]
   );
 
+  const totalPrice = useMemo(
+    () => cart.reduce((sum: number, item: Product) => sum + (item.price * (item.quantity ?? 1)), 0),
+    [cart]
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={items}
+        data={cart}
         renderItem={renderItem}
-        keyExtractor={(item) => item.product.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -77,7 +82,7 @@ export const CartScreen: React.FC = () => {
           </View>
         }
       />
-      {items.length > 0 && (
+      {cart.length > 0 && (
         <View style={styles.footer}>
           <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Total :</Text>

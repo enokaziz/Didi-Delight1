@@ -1,10 +1,16 @@
-"use client";
-
 import { useRef, useState, useCallback } from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Animated, Pressable, View, Text, StyleSheet } from "react-native";
+import {
+  Animated,
+  Pressable,
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import HomeScreen from "../screens/HomeScreen";
+import { useAuth } from "../contexts/AuthContext";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import DeliveryTrackingScreen from "../screens/DeliveryTrackingScreen";
 import ChatScreen from "../screens/ChatScreen";
@@ -13,20 +19,62 @@ import { CartStackNavigator } from "./CartStackNavigator";
 import { SettingsStackNavigator } from "./SettingsStackNavigator";
 import EventsNavigator from "./EventsNavigator";
 import PaymentNavigator from "./PaymentNavigator";
-
-// Style 7: Ludique et Coloré - Sidebar Version
+import CheckoutScreen from "../screens/CheckoutScreen"; // Ajouter l'import de CheckoutScreen
+import { getAuth, signOut } from "firebase/auth";
+import { CommonActions } from "@react-navigation/native";
 
 type IconConfigType = {
-  [key in
-    | "Accueil"
-    | "Panier"
-    | "Commandes"
-    | "Événements"
-    | "Suivi Livraison"
-    | "Paramètres"
-    | "Chat"
-    | "Paiement"
-    | "Fidélité"]: {
+  Accueil: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Panier: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Commandes: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Événements: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  "Suivi Livraison": {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Paramètres: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Chat: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Paiement: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Fidélité: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  Checkout: {
+    lib: typeof Ionicons | typeof MaterialIcons;
+    name: string;
+    color: string;
+  };
+  [key: string]: {
     lib: typeof Ionicons | typeof MaterialIcons;
     name: string;
     color: string;
@@ -42,7 +90,8 @@ const ICON_CONFIG: IconConfigType = {
   Paramètres: { lib: Ionicons, name: "settings", color: "#06D6A0" },
   Chat: { lib: Ionicons, name: "chatbubbles", color: "#FF9F1C" },
   Paiement: { lib: Ionicons, name: "card", color: "#8338EC" },
-  "Fidélité": { lib: Ionicons, name: "star", color: "#F04E98" },
+  Fidélité: { lib: Ionicons, name: "star", color: "#F04E98" },
+  Checkout: { lib: Ionicons, name: "cart", color: "#4ECDC4" },
 };
 
 type IconLibrary = typeof Ionicons | typeof MaterialIcons;
@@ -61,99 +110,89 @@ const getIcon = (
   return <IconComponent name={name as any} size={size} color={color} />;
 };
 
+const getRouteIcon = (route: string) => {
+  const config = ICON_CONFIG[route as keyof IconConfigType];
+  return config ? getIcon(config.lib, config.name, config.color, 24) : null;
+};
+
 const Drawer = createDrawerNavigator();
 
 // Custom drawer content component
 const CustomDrawerContent = ({ navigation, state }: any) => {
-  const [focusedRouteName, setFocusedRouteName] = useState<string>("Accueil");
-  const iconScale = useRef(new Animated.Value(1)).current;
+  const [activeRoute, setActiveRoute] = useState(state.routeNames[0]);
 
-  const handleNavigation = useCallback(
-    (routeName: string) => {
-      Animated.sequence([
-        Animated.timing(iconScale, {
-          toValue: 1.4,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(iconScale, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      setFocusedRouteName(routeName);
-      navigation.navigate(routeName);
-    },
-    [navigation, iconScale]
-  );
+  const handleLogout = useCallback(async () => {
+    try {
+      await signOut(getAuth());
+      navigation.getParent()?.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "AuthNavigator" }],
+        })
+      );
+    } catch (error) {
+      console.error("Erreur de déconnexion:", error);
+      Alert.alert("Erreur", "La déconnexion a échoué");
+    }
+  }, [navigation]);
 
   return (
     <View style={styles.drawerContainer}>
       <View style={styles.drawerHeader}>
-        <Text style={styles.drawerTitle}>Pâtisserie</Text>
+        <Text style={styles.drawerTitle}>Didi-Delight</Text>
         <Text style={styles.drawerSubtitle}>Délices & Gourmandises</Text>
       </View>
 
       <View style={styles.drawerContent}>
-        {Object.entries(ICON_CONFIG).map(
-          ([routeName, { lib, name, color }]) => {
-            const isFocused = routeName === focusedRouteName;
-            const iconColor = isFocused ? color : "#6c757d";
-            const iconSize = isFocused ? 24 : 22;
+        {/* Section Principale */}
+        {state.routeNames.slice(0, 6).map((route: string) => (
+          <Pressable
+            key={route}
+            style={[
+              styles.drawerItem,
+              activeRoute === route && styles.drawerItemFocused,
+            ]}
+            onPress={() => {
+              navigation.navigate(route);
+              setActiveRoute(route);
+            }}
+          >
+            {getRouteIcon(route)}
+            <Text style={styles.drawerItemText}>{route}</Text>
+          </Pressable>
+        ))}
 
-            // Check for chat notifications
-            const hasBadge = routeName === "Chat";
+        <View style={styles.divider} />
 
-            return (
-              <Pressable
-                key={routeName}
-                style={[
-                  styles.drawerItem,
-                  isFocused && {
-                    ...styles.drawerItemFocused,
-                    backgroundColor: `${color}20`,
-                  },
-                ]}
-                onPress={() => handleNavigation(routeName)}
-              >
-                <View
-                  style={[
-                    styles.iconContainer,
-                    { backgroundColor: isFocused ? color : "#f8f9fa" },
-                  ]}
-                >
-                  <Animated.View
-                    style={{
-                      transform: [{ scale: isFocused ? iconScale : 1 }],
-                    }}
-                  >
-                    {getIcon(lib, name, isFocused ? "#fff" : color, iconSize)}
-                  </Animated.View>
-                </View>
-                <Text
-                  style={[
-                    styles.drawerItemText,
-                    isFocused && { ...styles.drawerItemTextFocused, color },
-                  ]}
-                >
-                  {routeName === "Chat" ? "Support" : routeName}
-                </Text>
-                {hasBadge && (
-                  <View style={[styles.badge, { backgroundColor: color }]}>
-                    <Text style={styles.badgeText}>2</Text>
-                  </View>
-                )}
-              </Pressable>
-            );
-          }
-        )}
-      </View>
+        {/* Section Secondaire */}
+        {state.routeNames.slice(6).map((route: string) => (
+          <Pressable
+            key={route}
+            style={[
+              styles.drawerItem,
+              activeRoute === route && styles.drawerItemFocused,
+            ]}
+            onPress={() => {
+              navigation.navigate(route);
+              setActiveRoute(route);
+            }}
+          >
+            {getRouteIcon(route)}
+            <Text style={styles.drawerItemText}>{route}</Text>
+          </Pressable>
+        ))}
 
-      <View style={styles.drawerFooter}>
-        <Pressable style={styles.logoutButton}>
-          <Ionicons name="log-out" size={20} color="#fff" />
-          <Text style={styles.logoutText}>Se déconnecter</Text>
+        <View style={styles.divider} />
+
+        {/* Bouton Déconnexion */}
+        <Pressable
+          style={[styles.drawerItem, styles.logoutButton]}
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out" size={24} color="#dc3545" />
+          <Text style={[styles.drawerItemText, styles.logoutText]}>
+            Déconnexion
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -257,6 +296,13 @@ const ClientNavigator = () => {
           drawerLabel: "Programme Fidélité",
         }}
       />
+      <Drawer.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{
+          drawerLabel: "Checkout",
+        }}
+      />
     </Drawer.Navigator>
   );
 };
@@ -333,19 +379,18 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
+  divider: {
+    height: 1,
+    backgroundColor: "#e9ecef",
+    marginVertical: 10,
+    marginHorizontal: 20,
+  },
   logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF6B6B",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    width: "80%",
+    marginTop: 20,
+    backgroundColor: "#fff5f5",
   },
   logoutText: {
-    color: "#fff",
-    marginLeft: 10,
+    color: "#dc3545",
     fontWeight: "600",
   },
 });

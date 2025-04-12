@@ -10,11 +10,15 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { useNavigation, useRoute, NavigationProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  NavigationProp,
+} from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/types";
-import { Order, OrderItem as OrderItemType } from "../types/Order"; // Assurez-vous que OrderItem est défini
+import { Order, OrderItem as OrderItemType } from "../types/Order";
 import { useAuth } from "../contexts/AuthContext";
-import { getOrderById } from "../services/orderService"; // Nouvelle fonction à créer
+import { getOrderById } from "../services/orderService";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -47,7 +51,9 @@ const OrderDetailsScreen: React.FC = () => {
           useNativeDriver: true,
         }).start();
       } catch (err) {
-        setError((err as Error).message || "Erreur lors du chargement de la commande");
+        setError(
+          (err as Error).message || "Erreur lors du chargement de la commande"
+        );
         setLoading(false);
       }
     };
@@ -57,9 +63,12 @@ const OrderDetailsScreen: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Livrée": return <Ionicons name="checkmark-circle" size={24} color="green" />;
-      case "Expédiée": return <Ionicons name="time" size={24} color="orange" />;
-      default: return <Ionicons name="alert-circle" size={24} color="gray" />;
+      case "Livrée":
+        return <Ionicons name="checkmark-circle" size={24} color="green" />;
+      case "Expédiée":
+        return <Ionicons name="time" size={24} color="orange" />;
+      default:
+        return <Ionicons name="alert-circle" size={24} color="gray" />;
     }
   };
 
@@ -70,7 +79,7 @@ const OrderDetailsScreen: React.FC = () => {
     }
     navigation.navigate("OrderDetails", { orderId });
   };
-  
+
   const renderOrderItem = ({ item }: { item: OrderItemType }) => (
     <View style={styles.itemContainer}>
       <Text style={styles.itemName}>{item.name}</Text>
@@ -107,7 +116,10 @@ const OrderDetailsScreen: React.FC = () => {
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backIcon}
+          >
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.title}>Détails de la commande #{order.id}</Text>
@@ -136,17 +148,30 @@ const OrderDetailsScreen: React.FC = () => {
             renderItem={renderOrderItem}
             scrollEnabled={false}
           />
-          <Text style={styles.totalText}>Total : {order.total} FCFA</Text>
+          <Text style={styles.totalText}>Total : {order.totalAmount.toFixed(2)} FCFA</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Total</Text>
+          <Text style={styles.sectionContent}>
+            {order.totalAmount.toFixed(2)} FCFA
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Méthode de paiement</Text>
-          <Text style={styles.sectionContent}>{order.paymentMethod || "Non spécifiée"}</Text>
+          <Text style={styles.sectionContent}>
+            {order.paymentMethod || "Non spécifiée"}
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Adresse de livraison</Text>
-          <Text style={styles.sectionContent}>{order.shippingAddress || "Non spécifiée"}</Text>
+          <Text style={styles.sectionContent}>
+            {order.shippingAddress.street}\n
+            {order.shippingAddress.postalCode} {order.shippingAddress.city}\n
+            {order.shippingAddress.country}
+          </Text>
         </View>
       </ScrollView>
     </Animated.View>
@@ -159,15 +184,35 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
   backIcon: { marginRight: 10 },
   title: { fontSize: 24, fontWeight: "bold", color: "#333" },
-  section: { marginBottom: 20, backgroundColor: "#fff", padding: 15, borderRadius: 10, elevation: 2 },
-  sectionTitle: { fontSize: 18, fontWeight: "600", color: "#343a40", marginBottom: 10 },
+  section: {
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#343a40",
+    marginBottom: 10,
+  },
   sectionContent: { fontSize: 16, color: "#495057" },
   statusContainer: { flexDirection: "row", alignItems: "center" },
   statusText: { fontSize: 16, marginLeft: 8, color: "#495057" },
-  itemContainer: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#eee" },
+  itemContainer: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
   itemName: { fontSize: 16, fontWeight: "500", color: "#212529" },
   itemDetails: { fontSize: 14, color: "#666" },
-  totalText: { fontSize: 16, fontWeight: "bold", color: "#212529", marginTop: 10 },
+  totalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#212529",
+    marginTop: 10,
+  },
   errorText: { color: "red", textAlign: "center", margin: 20, fontSize: 16 },
   backButton: {
     backgroundColor: "#FF4952",

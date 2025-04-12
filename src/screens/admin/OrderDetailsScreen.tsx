@@ -1,6 +1,7 @@
 // src/screens/admin/OrderDetailsScreen.tsx
 import { Ionicons } from "@expo/vector-icons";
-import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -24,11 +25,9 @@ import { db } from "../../firebase/firebaseConfig";
 import type { AdminStackParamList } from "../../navigation/types";
 import type { Order, OrderStatus } from "../../types/Order";
 
-type OrderDetailsRouteProp = RouteProp<AdminStackParamList, "OrderDetails">;
-
 const OrderDetailsScreen: React.FC = () => {
-  const route = useRoute<OrderDetailsRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
+  const route = useRoute<RouteProp<AdminStackParamList, 'OrderDetails'>>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -42,7 +41,14 @@ const OrderDetailsScreen: React.FC = () => {
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
-        const orderDoc = await getDoc(doc(db, "orders", route.params.orderId));
+        const orderId = route.params?.orderId;
+        if (!orderId) {
+          console.error('ID de commande manquant');
+          navigation.goBack();
+          return;
+        }
+        
+        const orderDoc = await getDoc(doc(db, "orders", orderId));
         if (orderDoc.exists()) {
           const orderData = orderDoc.data() as Order;
           setOrder({ ...orderData, id: orderDoc.id });
@@ -52,16 +58,12 @@ const OrderDetailsScreen: React.FC = () => {
             setShowConfetti(true);
           }
         } else {
-          Alert.alert("Erreur", "Commande non trouvée");
+          console.error('Commande non trouvée');
           navigation.goBack();
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des détails:", error);
-        Alert.alert(
-          "Erreur",
-          "Une erreur s'est produite lors de la récupération des détails"
-        );
-        navigation.goBack();
+        console.error('Erreur lors de la récupération des détails de la commande:', error);
+        Alert.alert('Erreur', 'Impossible de charger les détails de la commande');
       } finally {
         setLoading(false);
 
@@ -82,7 +84,11 @@ const OrderDetailsScreen: React.FC = () => {
     };
 
     fetchOrderDetails();
-  }, [route.params.orderId, navigation, showConfetti]);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [route.params?.orderId, navigation]);
 
   useEffect(() => {
     if (showConfetti) {

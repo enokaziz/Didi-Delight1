@@ -43,87 +43,65 @@ export const useProducts = () => {
   // Récupération des produits depuis Firestore avec pagination
   const fetchProducts = useCallback(
     async (isRefresh = false) => {
+      console.log('Fetching products...', { 
+        isRefresh, 
+        selectedCategory, 
+        searchQuery,
+        lastDoc: !!lastDoc
+      });
+      
       setLoading(!isRefresh);
       setRefreshing(isRefresh);
       setError(null);
 
       try {
-        // Réinitialiser lastDoc si c'est un refresh
         if (isRefresh) {
           setLastDoc(null);
         }
 
-        // Construire la requête Firestore
-        let q;
+        let q = query(collection(db, "products"));
+        
+        // Appliquer les filtres
         if (selectedCategory) {
-          q = query(
-            collection(db, "products"),
-            where("category", "==", selectedCategory),
-            orderBy("name"),
-            limit(PRODUCTS_PER_PAGE)
-          );
-        } else {
-          q = query(
-            collection(db, "products"),
-            orderBy("name"),
-            limit(PRODUCTS_PER_PAGE)
-          );
+          q = query(q, where("category", "==", selectedCategory));
         }
-
-        // Ajouter startAfter pour la pagination si ce n'est pas un refresh
+        
+        q = query(q, orderBy("name"), limit(PRODUCTS_PER_PAGE));
+        
         if (!isRefresh && lastDoc) {
           q = query(q, startAfter(lastDoc));
         }
 
         const querySnapshot = await getDocs(q);
-
-        // Vérifier s'il y a plus de données à charger
+        console.log('Products received:', querySnapshot.docs.length);
+        
         setHasMore(querySnapshot.docs.length === PRODUCTS_PER_PAGE);
-
-        // Traiter les résultats
+        
         const newProducts = querySnapshot.docs
           .map((doc) => {
-            const productData = doc.data();
-            if (!isProductValid(productData)) {
-              console.warn("Document invalide:", doc.id, productData);
+            const data = doc.data();
+            if (!isProductValid(data)) {
+              console.warn('Invalid product:', doc.id, data);
               return null;
             }
-            // Exclure la propriété 'id' de productData pour éviter le conflit
-            const { id: _, ...productDataWithoutId } = productData;
-            return { id: doc.id, ...productDataWithoutId } as Product;
+            return { ...data, id: doc.id } as Product;
           })
           .filter(Boolean) as Product[];
 
-        // Mettre à jour les produits (remplacer ou ajouter)
-        setProducts((prev) =>
-          isRefresh ? newProducts : [...prev, ...newProducts]
-        );
-
-        // Mettre à jour le dernier document pour la pagination
+        setProducts(prev => isRefresh ? newProducts : [...prev, ...newProducts]);
+        
         if (querySnapshot.docs.length > 0) {
           setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
         }
-
-        // Extraire les catégories uniquement si nous n'avons pas déjà des catégories
-        if (categories.length === 0) {
-          const uniqueCategories = [
-            ...new Set(newProducts.map((product) => product.category)),
-          ];
-          setCategories(uniqueCategories);
-        }
-      } catch (err: any) {
-        console.error("Erreur lors de la récupération des produits :", err);
-        setError(
-          err.code === "unavailable"
-            ? "Problème de connexion. Vérifiez votre réseau."
-            : "Erreur inattendue. Veuillez réessayer."
-        );
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [selectedCategory, lastDoc, categories.length]
+    [selectedCategory, lastDoc]
   );
 
   // Charger plus de produits (pagination)

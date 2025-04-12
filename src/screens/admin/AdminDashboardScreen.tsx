@@ -205,7 +205,7 @@ const AdminDashboardPatisserie: React.FC = () => {
                 <Text style={styles.greeting}>Bonjour Didi 👋</Text>
                 <Text style={styles.title}>Tableau de Bord</Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.profileButton}
                 onPress={() => handleNavigation("AnalyticsScreen")}
               >

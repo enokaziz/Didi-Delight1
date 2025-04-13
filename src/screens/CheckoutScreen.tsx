@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useCheckoutAnimations } from "../hooks/useCheckoutAnimations";
 import { useOrderProcessing } from "../hooks/useOrderProcessing";
 import { validateCheckoutForm } from "../utils/validation";
 import AnimatedCartItem from "../components/checkout/AnimatedCartItem";
 import CheckoutForm from "../components/checkout/CheckoutForm";
 import LoadingOverlay from "../components/checkout/LoadingOverlay";
+import CheckoutModal from "../components/checkout/CheckoutModal";
 import styles from "../styles/checkoutStyles";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -18,10 +19,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Animated,
+  Modal,
 } from "react-native";
 
 export type FormState = {
@@ -30,48 +30,97 @@ export type FormState = {
   errors: string[];
 };
 
-const CheckoutScreen: React.FC = () => {
-  const { cart, clearCart, removeFromCart } = useCart(); // Assurez-vous que removeFromCart existe dans CartContext
+interface Props {
+  visible: boolean;
+  onClose?: () => void;
+}
+
+const CheckoutScreen: React.FC<Props> = ({ visible, onClose = () => {} }) => {
+  // Hooks
+  const { cart, clearCart } = useCart();
   const { user } = useAuth();
   const { loading, processOrder } = useOrderProcessing(clearCart);
   const { itemAnimations, overlayAnimations } = useCheckoutAnimations(
     cart.length
   );
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const buttonScale = new Animated.Value(1); // Pour l’effet au clic
 
+  // État local
   const [formState, setFormState] = useState<FormState>({
     address: "",
     paymentMethod: "",
     errors: [],
   });
 
+  const [showModal, setShowModal] = useState(false);
+
   const totalPrice = useMemo(
     () =>
       cart.reduce(
-        (sum: number, item: Product) => sum + item.price * (item.quantity ?? 1),
+        (sum: number, item: Product) => sum + item.price * (item.quantity || 1),
         0
       ),
     [cart]
   );
 
-  const handleOrder = useCallback(async () => {
-    if (!user) return Alert.alert("Erreur", "Authentification requise");
+  const handleOrder = async () => {
+    if (cart.length === 0) {
+      Alert.alert("Panier vide", "Votre panier est vide");
+      return;
+    }
+    setShowModal(true);
+  };
 
-    const [isValid, errors] = validateCheckoutForm(
-      formState.address,
-      formState.paymentMethod
-    );
-    if (!isValid) return setFormState((prev) => ({ ...prev, errors }));
+  useEffect(() => {
+    // Réinitialiser l'affichage quand la modal se ferme
+    if (!visible) {
+      setShowModal(false);
+    }
+  }, [visible]);
 
-    Alert.alert(
-      "Confirmer la commande",
-      `Voulez-vous confirmer votre commande de ${totalPrice} FCFA ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Confirmer",
-          onPress: async () => {
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={localStyles.scrollContent}>
+          {/* Bouton pour ouvrir la modal de paiement */}
+          <TouchableOpacity
+            style={localStyles.checkoutButton}
+            onPress={handleOrder}
+          >
+            <Text style={localStyles.checkoutButtonText}>
+              Finaliser la commande
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={localStyles.title}>Votre Panier</Text>
+
+          {/* Liste des articles */}
+          {cart.map((item, index) => (
+            <AnimatedCartItem
+              key={item.id}
+              item={item}
+              animation={itemAnimations[index]}
+            />
+          ))}
+
+          {/* Total */}
+          <View style={localStyles.totalContainer}>
+            <Text style={localStyles.totalText}>Total : {totalPrice} FCFA</Text>
+          </View>
+        </ScrollView>
+
+        {/* Modal de checkout */}
+        <CheckoutModal
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          formState={formState}
+          onFormChange={(newState) =>
+            setFormState((prev) => ({ ...prev, ...newState }))
+          }
+          totalPrice={totalPrice}
+          cart={cart}
+          onSubmit={async () => {
+            if (!user) return;
             const success = await processOrder(
               user.uid,
               cart,
@@ -79,203 +128,61 @@ const CheckoutScreen: React.FC = () => {
               formState.address,
               formState.paymentMethod
             );
-            if (success) {
-              Alert.alert("Succès", "Commande passée avec succès !", [
-                { text: "OK", onPress: () => navigation.navigate("Commandes") },
-              ]);
-            } else {
-              Alert.alert(
-                "Erreur",
-                "Échec du traitement de la commande. Veuillez réessayer."
-              );
-            }
-          },
-        },
-      ]
-    );
-  }, [user, formState, cart, totalPrice, processOrder, navigation]);
+            if (success) navigation.navigate("Commandes");
+          }}
+        />
 
-  const handleRemoveItem = useCallback(
-    (item: Product) => {
-      Alert.alert(
-        "Supprimer l’article",
-        `Voulez-vous supprimer ${item.name} du panier ?`,
-        [
-          { text: "Annuler", style: "cancel" },
-          {
-            text: "Supprimer",
-            onPress: () => {
-              removeFromCart(item.id, 1); // Supprime une unité à la fois
-            },
-          },
-        ]
-      );
-    },
-    [removeFromCart]
-  );
+        <LoadingOverlay visible={loading} animations={overlayAnimations} />
 
-  const animateButtonPress = () => {
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={localStyles.container}
-      >
-        <ScrollView
-          contentContainerStyle={localStyles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          alwaysBounceVertical={true}
-        >
-          <Text style={localStyles.title}>Finaliser la commande</Text>
-
-          {formState.errors.length > 0 && (
-            <View style={localStyles.errorContainer}>
-              {formState.errors.map((error, index) => (
-                <Text key={index} style={localStyles.errorText}>
-                  {error}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          <CheckoutForm
-            formState={formState}
-            onFormChange={(newState) =>
-              setFormState((prev) => ({
-                ...prev,
-                ...newState,
-                errors: newState.errors || prev.errors,
-              }))
-            }
-          />
-
-          <Text style={localStyles.sectionTitle}>Articles ({cart.length})</Text>
-          {cart.map((item, index) =>
-            itemAnimations[index] ? (
-              <View key={item.id}>
-                <AnimatedCartItem
-                  item={item}
-                  animation={itemAnimations[index]}
-                />
-                <TouchableOpacity
-                  style={localStyles.removeButton}
-                  onPress={() => handleRemoveItem(item)}
-                >
-                  <Text style={localStyles.removeButtonText}>Supprimer</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          )}
-
-          <View style={localStyles.summaryContainer}>
-            <Text style={localStyles.summaryTitle}>Résumé</Text>
-            <View style={localStyles.summaryRow}>
-              <Text>Total</Text>
-              <Text style={localStyles.totalPrice}>{totalPrice} FCFA</Text>
-            </View>
-          </View>
-
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <TouchableOpacity
-              style={[
-                localStyles.orderButton,
-                loading && localStyles.orderButtonDisabled,
-              ]}
-              onPress={() => {
-                animateButtonPress();
-                handleOrder();
-              }}
-              disabled={loading || cart.length === 0}
-              accessibilityLabel="Confirmer et passer la commande"
-              accessibilityHint={`Finalise votre commande de ${totalPrice} FCFA avec les informations fournies`}
-            >
-              <Text style={localStyles.orderButtonText}>
-                {loading ? "Traitement en cours..." : "Passer la commande"}
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <LoadingOverlay visible={loading} animations={overlayAnimations} />
-    </SafeAreaView>
+        <TouchableOpacity style={localStyles.closeButton} onPress={onClose}>
+          <Text>Fermer</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </Modal>
   );
 };
 
 const localStyles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 20, paddingBottom: 100 }, // Plus d’espace en bas
+  scrollContent: {
+    padding: 20,
+    paddingTop: 10,
+  },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "600",
     marginBottom: 20,
-    color: "#212529",
+    textAlign: "center",
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 20,
-    marginBottom: 10,
-    color: "#343a40",
-  },
-  errorContainer: {
-    backgroundColor: "#ffebee",
+  totalContainer: {
+    marginVertical: 20,
     padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  errorText: { color: "#d32f2f", fontSize: 14 },
-  summaryContainer: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#f7f7f7",
     borderRadius: 10,
   },
-  summaryTitle: {
+  totalText: {
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 10,
-    color: "#343a40",
+    textAlign: "center",
   },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  totalPrice: { fontWeight: "bold", fontSize: 16, color: "#212529" },
-  orderButton: {
-    backgroundColor: "#FF4952",
+  checkoutButton: {
+    backgroundColor: "#2e8b57",
     padding: 15,
     borderRadius: 10,
-    alignItems: "center",
-    marginTop: 25,
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  orderButtonDisabled: { backgroundColor: "#adb5bd", opacity: 0.7 },
-  orderButtonText: { color: "white", fontSize: 16, fontWeight: "600" },
-  removeButton: {
-    backgroundColor: "#d32f2f",
-    padding: 8,
-    borderRadius: 5,
-    alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 10,
+  checkoutButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
   },
-  removeButtonText: { color: "white", fontSize: 14 },
+  closeButton: {
+    position: "absolute",
+    top: 20,
+    right: 10,
+    backgroundColor: "#FF4952",
+    padding: 10,
+    borderRadius: 50,
+  },
 });
 
 export default CheckoutScreen;

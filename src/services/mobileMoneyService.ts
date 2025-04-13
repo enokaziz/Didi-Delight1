@@ -1,42 +1,44 @@
-
-
 interface Transaction {
-    id: string;
-    amount: number;
-    sender: string;
-    receiver: string;
-    date: Date;
+  id: string;
+  amount: number;
+  sender: string;
+  receiver: string;
+  date: Date;
 }
 
 class MobileMoneyService {
-    private transactions: Transaction[] = [];
+  private transactions: Transaction[] = [];
 
-    constructor() {}
+  constructor() {}
 
-    public sendMoney(sender: string, receiver: string, amount: number): Transaction {
-        const transaction: Transaction = {
-            id: this.generateTransactionId(),
-            amount,
-            sender,
-            receiver,
-            date: new Date(),
-        };
+  public sendMoney(
+    sender: string,
+    receiver: string,
+    amount: number
+  ): Transaction {
+    const transaction: Transaction = {
+      id: this.generateTransactionId(),
+      amount,
+      sender,
+      receiver,
+      date: new Date(),
+    };
 
-        this.transactions.push(transaction);
-        return transaction;
-    }
+    this.transactions.push(transaction);
+    return transaction;
+  }
 
-    public getTransactionById(id: string): Transaction | undefined {
-        return this.transactions.find(transaction => transaction.id === id);
-    }
+  public getTransactionById(id: string): Transaction | undefined {
+    return this.transactions.find((transaction) => transaction.id === id);
+  }
 
-    public getAllTransactions(): Transaction[] {
-        return this.transactions;
-    }
+  public getAllTransactions(): Transaction[] {
+    return this.transactions;
+  }
 
-    private generateTransactionId(): string {
-        return Math.random().toString(36).substr(2, 9);
-    }
+  private generateTransactionId(): string {
+    return Math.random().toString(36).substr(2, 9);
+  }
 }
 
 export default MobileMoneyService;

@@ -50,6 +50,46 @@ const orderHistoryStyles = StyleSheet.create({
   selectedFilterText: {
     color: "white",
   },
+  orderItem: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  orderId: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  orderInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statusText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  orderDate: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 8,
+  },
+  detailsButton: {
+    color: '#007AFF',
+    fontSize: 14,
+    textAlign: 'right',
+  },
 });
 
 export { orderHistoryStyles };

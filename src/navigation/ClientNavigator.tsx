@@ -19,7 +19,6 @@ import { CartStackNavigator } from "./CartStackNavigator";
 import { SettingsStackNavigator } from "./SettingsStackNavigator";
 import EventsNavigator from "./EventsNavigator";
 import PaymentNavigator from "./PaymentNavigator";
-import CheckoutScreen from "../screens/CheckoutScreen"; // Ajouter l'import de CheckoutScreen
 import { getAuth, signOut } from "firebase/auth";
 import { CommonActions } from "@react-navigation/native";
 
@@ -69,11 +68,6 @@ type IconConfigType = {
     name: string;
     color: string;
   };
-  Checkout: {
-    lib: typeof Ionicons | typeof MaterialIcons;
-    name: string;
-    color: string;
-  };
   [key: string]: {
     lib: typeof Ionicons | typeof MaterialIcons;
     name: string;
@@ -91,7 +85,6 @@ const ICON_CONFIG: IconConfigType = {
   Chat: { lib: Ionicons, name: "chatbubbles", color: "#FF9F1C" },
   Paiement: { lib: Ionicons, name: "card", color: "#8338EC" },
   Fidélité: { lib: Ionicons, name: "star", color: "#F04E98" },
-  Checkout: { lib: Ionicons, name: "cart", color: "#4ECDC4" },
 };
 
 type IconLibrary = typeof Ionicons | typeof MaterialIcons;
@@ -294,13 +287,6 @@ const ClientNavigator = () => {
         component={LoyaltyPointsScreen}
         options={{
           drawerLabel: "Programme Fidélité",
-        }}
-      />
-      <Drawer.Screen
-        name="Checkout"
-        component={CheckoutScreen}
-        options={{
-          drawerLabel: "Checkout",
         }}
       />
     </Drawer.Navigator>

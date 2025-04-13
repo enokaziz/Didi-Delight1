@@ -1,29 +1,33 @@
-import { db } from '../../firebase/firebaseConfig';
-import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
-import { Linking, Alert } from 'react-native';
+import { db } from "../../firebase/firebaseConfig";
+import { collection, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
+import { Linking, Alert } from "react-native";
 
 export type MobileMoneyTransaction = {
   userId: string;
   orderId: string;
   amount: number;
   phoneNumber: string;
-  provider: 'orange' | 'moov';
-  status: 'pending' | 'completed' | 'failed';
+  provider: "orange" | "moov";
+  status: "pending" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;
 };
-export const payWithMobileMoney = (provider: string, amount: number, phoneNumber: string) => {
-  let ussdCode = '';
+export const payWithMobileMoney = (
+  provider: string,
+  amount: number,
+  phoneNumber: string
+) => {
+  let ussdCode = "";
 
   switch (provider) {
-    case 'Orange Money':
+    case "Orange Money":
       ussdCode = `#144*2*${amount}*${phoneNumber}#`;
       break;
-    case 'Moov Money':
+    case "Moov Money":
       ussdCode = `*155*1*${amount}*${phoneNumber}#`;
       break;
     default:
-      Alert.alert('Service non disponible');
+      Alert.alert("Service non disponible");
       return;
   }
 
@@ -38,7 +42,7 @@ export const mobileMoneyService = {
     orderId: string,
     amount: number,
     phoneNumber: string,
-    provider: 'orange' | 'moov'
+    provider: "orange" | "moov"
   ): Promise<string> => {
     try {
       const transaction: MobileMoneyTransaction = {
@@ -47,71 +51,78 @@ export const mobileMoneyService = {
         amount,
         phoneNumber,
         provider,
-        status: 'pending',
+        status: "pending",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      
-      const docRef = await addDoc(collection(db, 'mobileMoneyTransactions'), transaction);
-      
+      const docRef = await addDoc(
+        collection(db, "mobileMoneyTransactions"),
+        transaction
+      );
+
       // Ici, vous devriez intégrer l'API de l'opérateur (Orange ou Moov)
       // pour initier la vraie transaction
       // Cette partie dépendra de l'API fournie par l'opérateur
 
       return docRef.id;
     } catch (error) {
-      console.error('Erreur lors de l\'initiation de la transaction:', error);
-      throw new Error('Impossible d\'initier la transaction Mobile Money');
+      console.error("Erreur lors de l'initiation de la transaction:", error);
+      throw new Error("Impossible d'initier la transaction Mobile Money");
     }
   },
 
   // Vérifier le statut d'une transaction
   checkTransactionStatus: async (transactionId: string): Promise<string> => {
     try {
-      const transactionRef = doc(db, 'mobileMoneyTransactions', transactionId);
+      const transactionRef = doc(db, "mobileMoneyTransactions", transactionId);
       const transactionDoc = await getDoc(transactionRef);
 
       if (!transactionDoc.exists()) {
-        throw new Error('Transaction non trouvée');
+        throw new Error("Transaction non trouvée");
       }
 
       return transactionDoc.data().status;
     } catch (error) {
-      console.error('Erreur lors de la vérification du statut:', error);
-      throw new Error('Impossible de vérifier le statut de la transaction');
+      console.error("Erreur lors de la vérification du statut:", error);
+      throw new Error("Impossible de vérifier le statut de la transaction");
     }
   },
 
   // Mettre à jour le statut d'une transaction
   updateTransactionStatus: async (
     transactionId: string,
-    status: 'completed' | 'failed'
+    status: "completed" | "failed"
   ): Promise<void> => {
     try {
-      const transactionRef = doc(db, 'mobileMoneyTransactions', transactionId);
+      const transactionRef = doc(db, "mobileMoneyTransactions", transactionId);
       await updateDoc(transactionRef, {
         status,
         updatedAt: new Date(),
       });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error);
-      throw new Error('Impossible de mettre à jour le statut de la transaction');
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      throw new Error(
+        "Impossible de mettre à jour le statut de la transaction"
+      );
     }
   },
 
   // Valider un numéro de téléphone
-  validatePhoneNumber: (phoneNumber: string, provider: 'orange' | 'moov'): boolean => {
+  validatePhoneNumber: (
+    phoneNumber: string,
+    provider: "orange" | "moov"
+  ): boolean => {
     // Vérifier que le numéro a 8 chiffres
     if (!/^\d{8}$/.test(phoneNumber)) {
       return false;
     }
 
     // Vérifier les préfixes selon l'opérateur
-    if (provider === 'orange') {
+    if (provider === "orange") {
       // Préfixes Orange (à adapter selon les préfixes réels dans votre pays)
       return /^0[567]/.test(phoneNumber);
-    } else if (provider === 'moov') {
+    } else if (provider === "moov") {
       // Préfixes Moov (à adapter selon les préfixes réels dans votre pays)
       return /^0[12]/.test(phoneNumber);
     }

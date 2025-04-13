@@ -1,87 +1,45 @@
-import React, { useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import CheckoutFormInput from './CheckoutFormInput';
-import { FormState } from '../../screens/CheckoutScreen';
+import React from 'react';
+import { View, TextInput, StyleSheet } from 'react-native';
 
-type Props = {
-  formState: FormState;
-  onFormChange: (state: { errors: string[]; address: string; paymentMethod: string }) => void;
+type FormState = {
+  address: string;
+  paymentMethod: string;
 };
 
-const CheckoutForm = ({ formState, onFormChange }: Props) => {
-  const addressInputRef = useRef<TextInput>(null);
-  const paymentInputRef = useRef<TextInput>(null);
+interface Props {
+  formState: FormState;
+  onFormChange: (newState: Partial<FormState>) => void;
+}
 
-  const handleInputChange = useCallback(
-    (field: keyof FormState, value: string) => {
-      onFormChange({
-        ...formState,
-        [field]: value,
-        errors: [],
-      });
-    },
-    [formState, onFormChange]
-  );
-
+const CheckoutForm: React.FC<Props> = ({ formState, onFormChange }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Informations de livraison</Text>
-      <TouchableOpacity
-        style={styles.inputWrapper}
-        onPress={() => addressInputRef.current?.focus()}
-        activeOpacity={0.7} // Légère opacité au clic pour feedback visuel
-      >
-        <CheckoutFormInput
-          ref={addressInputRef}
-          placeholder="Adresse de livraison"
-          value={formState.address}
-          onChangeText={(text) => handleInputChange('address', text)}
-          accessibilityLabel="Adresse de livraison"
-          accessibilityHint="Entrez votre adresse complète de livraison"
-        />
-      </TouchableOpacity>
-
-      {formState.errors.includes('address') && (
-        <Text style={styles.errorText}>Veuillez entrer une adresse valide.</Text>
-      )}
-
-      <Text style={styles.sectionTitle}>Paiement</Text>
-      <TouchableOpacity
-        style={styles.inputWrapper}
-        onPress={() => paymentInputRef.current?.focus()}
-        activeOpacity={0.7} // Légère opacité au clic pour feedback visuel
-      >
-        <CheckoutFormInput
-          ref={paymentInputRef}
-          placeholder="Méthode de paiement"
-          value={formState.paymentMethod}
-          onChangeText={(text) => handleInputChange('paymentMethod', text)}
-          accessibilityLabel="Méthode de paiement"
-          accessibilityHint="Entrez votre méthode de paiement préférée"
-        />
-      </TouchableOpacity>
-
-      {formState.errors.includes('paymentMethod') && (
-        <Text style={styles.errorText}>Veuillez entrer une méthode de paiement valide.</Text>
-      )}
+      <TextInput
+        style={styles.input}
+        placeholder="Adresse de livraison"
+        value={formState.address}
+        onChangeText={(text) => onFormChange({ address: text })}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Méthode de paiement"
+        value={formState.paymentMethod}
+        onChangeText={(text) => onFormChange({ paymentMethod: text })}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 10, color: '#343a40' },
-  inputWrapper: {
-    marginBottom: 15,
-    backgroundColor: '#fff', // Fond blanc pour une zone cliquable visible
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    padding: 5, // Padding pour agrandir la zone cliquable
+  container: {
+    marginVertical: 20,
   },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 15,
+    marginBottom: 15,
   },
 });
 

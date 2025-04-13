@@ -60,7 +60,7 @@ const LoyaltyPointsScreen: React.FC = () => {
         try {
         points = await loyaltyPointsService.initializeUserPoints(
           user.uid,
-          user.displayName || undefined,
+          user.displayName || "Utilisateur",
           user.email || undefined
         );
         } catch (initError) {
